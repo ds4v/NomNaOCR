@@ -4,7 +4,6 @@ import operator
 import math
 import cv2
 
-
 class BoundingBoxHandler:
     # https://stackoverflow.com/questions/51074984/sorting-according-to-clockwise-point-coordinates
     @staticmethod
@@ -44,17 +43,16 @@ class BoundingBoxHandler:
 
     # https://pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python
     @staticmethod
-    def NonMaxSuppression(bboxes, threshold):
-        # If there are no bboxes, return an empty list
-        if len(bboxes) == 0:
-            return []
+    def NonMaximumSuppression(bboxes, threshold, inverse_idxs=False):
+        if len(bboxes) == 0: return []
         np_bboxes = np.array([bbox['points'] for bbox in bboxes])
-        pick = []  # Initialize the list of picked indexes
+        pick_idxs = []  # Initialize the list of picked indexes
+        pick_bboxes = [] 
 
-        x1 = np_bboxes[:, 0, 0]
-        y1 = np_bboxes[:, 0, 1]
-        x2 = np_bboxes[:, 2, 0]
-        y2 = np_bboxes[:, 2, 1]
+        x1 = np_bboxes[:, 0, 0] # x coordinate of the top-left corner
+        y1 = np_bboxes[:, 0, 1] # y coordinate of the top-left corner
+        x2 = np_bboxes[:, 2, 0] # x coordinate of the bottom-right corner
+        y2 = np_bboxes[:, 2, 1] # y coordinate of the bottom-right corner
 
         # Compute the area of the bounding boxes and sort the bounding
         # boxes by the bottom-right y-coordinate of the bounding box
@@ -67,7 +65,8 @@ class BoundingBoxHandler:
             # index value to the list of picked indexes
             last = len(idxs) - 1
             i = idxs[last]
-            pick.append(i)
+            pick_idxs.append(i)
+            pick_bboxes.append(bboxes[i])
 
             # Find the largest (x, y) coordinates for the start of
             # the bounding box and the smallest (x, y) coordinates
@@ -89,5 +88,7 @@ class BoundingBoxHandler:
                 [last],
                 np.where(overlap > threshold)[0]
             )))
+
         # Return only the bounding boxes that were picked using the integer data type
-        return list(map(bboxes.__getitem__, pick))
+        if not inverse_idxs: return pick_bboxes
+        return [bbox for idx, bbox in enumerate(bboxes) if idx not in pick_idxs]
