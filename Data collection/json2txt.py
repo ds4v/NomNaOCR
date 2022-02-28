@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, FileType
 import json
 import os
-import sys
+import re
 
 ap = ArgumentParser()
 ap.add_argument(
@@ -30,14 +30,18 @@ with open(url_path, 'w', encoding='utf-8') as url_file, \
 
     for page in data:
         url_file.write(base_url + page['url'] + '\n')
-        text = page['text'].replace('\n\n', '\n').split('\n')
+        text = page['text'].replace('\n\n', '\n')
+        text = re.sub(r'[\[\?\]]', '-', text).split('\n')
 
         for idx, sentence in enumerate(text):
+            sentence = sentence.strip()
             if sentence == '': continue
+
             if idx % 2 == 0: 
                 nom_file.write(sentence + '\n')
                 vocabs.extend(list(sentence))
             else: modern_file.write(sentence + '\n')
 
-    vocabs = set(vocabs) # Remove duplicates in vocabs
+    vocabs = set(vocabs) # remove duplicates in vocabs
+    vocabs.discard('-') # remove '-' from vocabs
     vocabs_file.write('\n'.join(vocabs))
