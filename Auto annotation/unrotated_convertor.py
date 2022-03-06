@@ -31,7 +31,7 @@ ap.add_argument(
 args = vars(ap.parse_args())
 
 '''Example:
-python combine_rotated_bboxes.py \
+python unrotated_convertor.py \
     -i "../Dataset/Tale of Kieu version 1866 - Rotate/Cache.cach" \
     -o "../Dataset/Tale of Kieu version 1866/Cache.cach" \
     -d "both" \

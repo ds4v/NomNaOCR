@@ -14,7 +14,7 @@ ap.add_argument(
     help = 'Right angle direction to rotate'
 )
 args = vars(ap.parse_args())
-# Example: python generate_rotated_images.py -i "../Dataset/Tale of Kieu version 1866"
+# Example: python rotated_generator.py -i "../Dataset/Tale of Kieu version 1866"
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_dir = os.path.join(script_dir, args['input_dir']).strip('/')
