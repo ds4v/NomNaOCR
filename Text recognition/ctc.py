@@ -17,7 +17,6 @@ class CTCLayer(tf.keras.layers.Layer):
         return y_pred  # At test time, just return the computed predictions.
         
         
-# A utility function to decode the output of the network
 def decode_batch_predictions(preds, max_length, beam_width, num2char_func):
     # Use greedy search. For complex tasks, you can use beam search
     preds_decoded = tf.keras.backend.ctc_decode(
