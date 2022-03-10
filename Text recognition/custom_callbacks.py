@@ -59,7 +59,8 @@ class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         loss, val_loss = logs.get('loss'), logs.get('val_loss')
-        if np.less(val_loss, self.best_loss) and val_loss - loss < 10:
+        stuck = val_loss - loss >= 10 or (epoch > 5 and val_loss > 30)
+        if np.less(val_loss, self.best_loss) and not stuck:
             self.wait = 0
             self.best_loss = val_loss
             self.best_epoch = epoch

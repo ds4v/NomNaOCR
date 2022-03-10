@@ -18,7 +18,6 @@ class CTCLayer(tf.keras.layers.Layer):
         
         
 def decode_batch_predictions(preds, max_length, beam_width, num2char_func):
-    # Use greedy search. For complex tasks, you can use beam search
     preds_decoded = tf.keras.backend.ctc_decode(
         preds,
         input_length = np.ones(preds.shape[0]) * preds.shape[1],

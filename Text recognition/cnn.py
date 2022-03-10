@@ -1,18 +1,11 @@
+import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, BatchNormalization, LeakyReLU, MaxPooling2D, Reshape
 
 
-def _reshape_for_cnn(last_cnn_layer, dim_to_keep):
-    # Reshape accordingly before passing the output to the RNN part
-    _, height, width, channel = last_cnn_layer.get_shape()
-    if dim_to_keep == 1:
-        target_shape = (height, width * channel)
-    elif dim_to_keep == 2:
-        target_shape = (width, height * channel)
-    elif dim_to_keep == 3 or dim_to_keep == -1:
-        target_shape = (height * width, channel)
-    else:
-        raise ValueError('Invalid dim_to_keep value')
-    return Reshape(target_shape=(target_shape), name='rnn_input')(last_cnn_layer)
+def get_imagenet_model(model_name, input_shape):
+    # Pick a model from https://keras.io/api/applications
+    base_model = eval('tf.keras.applications.' + model_name)
+    return base_model(input_shape=input_shape, weights=None, include_top=False)
 
 
 def custom_cnn(config, image_input, dim_to_keep=-1):
@@ -37,12 +30,18 @@ def custom_cnn(config, image_input, dim_to_keep=-1):
         x = MaxPooling2D(pool_size, name=f'{block_name}_pool')(x)
 
     # Last Convolution has 2x2 kernel with no padding and no followed MaxPooling layer
-    x = _conv_bn_leaky(x, filters, 'final', '', True)
-    return _reshape_for_cnn(x, dim_to_keep)
+    return _conv_bn_leaky(x, filters, 'final', '', True)
 
 
-def imagenet_model(model_name, input_shape, get_layer, dim_to_keep=-1):
-    base_model = eval('tf.keras.applications.' + model_name)
-    base_model = base_model(input_shape=input_shape, weights=None, include_top=False)
-    x = base_model.get_layer(name=get_layer if get_layer else base_model.layers[-1]).output
-    return _reshape_for_cnn(x, dim_to_keep)
+def reshape_for_cnn(last_cnn_layer, dim_to_keep):
+    # Reshape accordingly before passing the output to the RNN part
+    _, height, width, channel = last_cnn_layer.get_shape()
+    if dim_to_keep == 1:
+        target_shape = (height, width * channel)
+    elif dim_to_keep == 2:
+        target_shape = (width, height * channel)
+    elif dim_to_keep == 3 or dim_to_keep == -1:
+        target_shape = (height * width, channel)
+    else:
+        raise ValueError('Invalid dim_to_keep value')
+    return Reshape(target_shape=(target_shape), name='rnn_input')(last_cnn_layer)
