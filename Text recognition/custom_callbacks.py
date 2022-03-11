@@ -13,7 +13,6 @@ class EditDistanceCallback(tf.keras.callbacks.Callback):
         for batch in tf_dataset:
             self.images.append(batch['image'])
             self.labels.append(batch['label'])
-        
 
     def _calculate_edit_distance(self, labels, predictions):
         # Make predictions and convert them to sparse tensors.
@@ -30,7 +29,6 @@ class EditDistanceCallback(tf.keras.callbacks.Callback):
         # Compute individual edit distances and average them out.
         edit_distances = tf.edit_distance(sparse_preds, sparse_labels, normalize=False)
         return tf.reduce_mean(edit_distances).numpy()
-
 
     def on_epoch_end(self, epoch, logs=None):
         edit_distances = []
@@ -49,13 +47,11 @@ class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
         self.patience = patience
         self.best_weights = None
 
-
     def on_train_begin(self, logs=None):
         self.wait = 0 # Number of epoch it has waited when loss is no longer minimum
         self.stopped_epoch = 0 # The epoch the training stops at
         self.best_loss = np.Inf # Initialize the best loss as infinity
         self.best_epoch = 0
-        
 
     def on_epoch_end(self, epoch, logs=None):
         loss, val_loss = logs.get('loss'), logs.get('val_loss')
@@ -72,7 +68,6 @@ class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
                 self.model.stop_training = True
                 self.model.set_weights(self.best_weights)
                 print('Restored weights from the end of epoch:', self.best_epoch + 1)
-
 
     def on_train_end(self, logs=None):
         if self.stopped_epoch > 0:
