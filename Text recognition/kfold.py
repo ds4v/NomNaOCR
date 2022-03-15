@@ -2,8 +2,8 @@ import tensorflow as tf
 from sklearn.model_selection import KFold
 
 
-def kfold_decorator(n_splits):
-    kf = KFold(n_splits=n_splits, shuffle=True)
+def kfold_decorator(n_splits, random_state=None):
+    kf = KFold(n_splits=n_splits, random_state=random_state, shuffle=True)
     valid_datasets = []
     best_epochs = []
     edist_logs = []
@@ -16,11 +16,11 @@ def kfold_decorator(n_splits):
                 reset_model = tf.keras.models.clone_model(model)
                 reset_model._name = f'Model_{fold_idx + 1}'
 
-                print(f'Start training for Fold {fold_idx + 1}:')
+                print(f'Start training for Fold {fold_idx + 1:02d}:')
                 valid_tf_dataset, best_epoch, edist_log, history = func(
                     reset_model, img_paths, labels, train_idx, valid_idx
                 )
-                print(f'Finish training for Fold {fold_idx + 1}\n')
+                print(f'Finish training for Fold {fold_idx + 1:02d}\n')
 
                 valid_datasets.append((valid_tf_dataset, valid_idx))
                 best_epochs.append(best_epoch)

@@ -1,12 +1,14 @@
 import os
 import re
+import opencc
 import numpy as np
 import tensorflow as tf
 from pathlib import Path
 from collections import defaultdict
 
 
-def create_dataset(dataset_path):
+def create_dataset(dataset_path, sim2tra=True):
+    converter = opencc.OpenCC('s2t.json')
     raw_paths = list(map(str, Path(dataset_path).glob('*.jpg')))
     img_paths, labels = [], []
     vocabs = defaultdict(int)
@@ -15,9 +17,10 @@ def create_dataset(dataset_path):
         if os.path.getsize(path):
             img_paths.append(path)
             label = re.sub('_.*', '', os.path.basename(path))
-            labels.append(label)
+            if sim2tra: label = converter.convert(label)
             for char in label: vocabs[char] += 1
-
+            labels.append(label)
+            
     vocabs = dict(sorted(
         vocabs.items(),
         key = lambda item: item[1],
