@@ -15,11 +15,12 @@ def create_dataset(dataset_path, sim2tra=True):
 
     for path in raw_paths:
         if os.path.getsize(path):
-            img_paths.append(path)
             label = re.sub('_.*', '', os.path.basename(path))
             if sim2tra: label = converter.convert(label)
-            for char in label: vocabs[char] += 1
-            labels.append(label)
+            if label not in labels:
+                img_paths.append(path)
+                for char in label: vocabs[char] += 1
+                labels.append(label)
             
     vocabs = dict(sorted(
         vocabs.items(),
