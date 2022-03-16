@@ -36,7 +36,7 @@ python unrotated_convertor.py \
     -o "../Dataset/Tale of Kieu version 1866/Cache.cach" \
     -d "both" \
     -t 0.7 \
-    -m 0 \
+    -m 0
 '''
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +63,7 @@ def rotate_bboxes_to_0deg(image_idx, file_path, bboxes):
             os.path.basename(file_path)  # Get file name
         )
         bboxes[idx] = BoundingBoxHandler.RotateOneBox(absolute_path, bbox, -angle)
-        bboxes[idx]['points'] = BoundingBoxHandler.OrderPoints(bboxes[idx]['points'])
+        bboxes[idx]['points'] = BoundingBoxHandler.RectangleTransform(bboxes[idx]['points'])
 
     print('Rotated', file_path, 'bouding boxes to 0 degree')
     return bboxes
