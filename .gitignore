@@ -5,3 +5,4 @@ Dataset
 *.jpg
 *.h5
 *.ttf
+!PPOCRLabel.zip
