@@ -33,7 +33,9 @@ def create_dataset(dataset_dir, labels_path, sim2tra=True):
 
 
 def remove_rare_chars(img_paths, labels, vocabs, threshold=3):
+    if threshold < 2: return img_paths, labels, vocabs
     rare_chars, new_vocabs = [], vocabs.copy()
+    
     for char, freq in vocabs.items():
         if freq < threshold:
             rare_chars.append(char)
