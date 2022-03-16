@@ -1,26 +1,28 @@
 import os
-import re
 import opencc
 import numpy as np
 import tensorflow as tf
-from pathlib import Path
+from string import punctuation
 from collections import defaultdict
 
 
-def create_dataset(dataset_path, sim2tra=True):
+def create_dataset(dataset_dir, labels_path, sim2tra=True):
     converter = opencc.OpenCC('s2t.json')
-    raw_paths = list(map(str, Path(dataset_path).glob('*.jpg')))
     img_paths, labels = [], []
     vocabs = defaultdict(int)
 
-    for path in raw_paths:
-        if os.path.getsize(path):
-            label = re.sub('_.*', '', os.path.basename(path))
-            if sim2tra: label = converter.convert(label)
-            if label not in labels:
-                img_paths.append(path)
-                for char in label: vocabs[char] += 1
-                labels.append(label)
+    with open(labels_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            img_name, text = line.rstrip('\n').split('\t')
+            img_path = os.path.join(dataset_dir, img_name)
+
+            if os.path.getsize(img_path) and \
+                not any(char in text for char in punctuation):
+                if sim2tra: text = converter.convert(text)
+                if img_path not in img_paths: # Just for safety
+                    img_paths.append(img_path)
+                    labels.append(text)
+                    for char in text: vocabs[char] += 1
             
     vocabs = dict(sorted(
         vocabs.items(),
