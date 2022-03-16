@@ -15,15 +15,19 @@ ap.add_argument(
     help = 'Current right angle direction of input images'
 )
 ap.add_argument(
-    '-t',
-    '--threshold',
+    '--max_woh',
+    required = 'both' in sys.argv[-1],
+    type = float,
+    help = '(Required if direction == "both") Maximum ratio width over height to filter'
+)
+ap.add_argument(
+    '--overlap',
     required = 'both' in sys.argv[-1],
     type = float,
     help = '(Required if direction == "both") Overlap threshold to suppress'
 )
 ap.add_argument(
-    '-m',
-    '--nms_inverse_idxs',
+    '--nms_inverse', # Sometimes the non-maximum boxes fit the sentence better
     required = 'both' in sys.argv[-1],
     type = lambda val: val.lower() in ('true', 't', '1'),
     help = '(Required if direction == "both") Inverve indices after NMS or not'
@@ -32,11 +36,12 @@ args = vars(ap.parse_args())
 
 '''Example:
 python unrotated_convertor.py \
-    -i "../Dataset/Tale of Kieu version 1866 - Rotate/Cache.cach" \
-    -o "../Dataset/Tale of Kieu version 1866/Cache.cach" \
+    -i "../../Dataset/Tale of Kieu version 1866 - Rotate/Cache.cach" \
+    -o "../../Dataset/Tale of Kieu version 1866/Cache.cach" \
     -d "both" \
-    -t 0.7 \
-    -m 0
+    --max_woh 0.25 \
+    --overlap 0.7 \
+    --nms_inverse 0
 '''
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -81,6 +86,7 @@ with open(output_path, 'w', encoding='utf-8') as file:
             file_path, bboxes = item
             final_path = file_path.replace(args['direction'], '').replace(' - Rotate', '')
             bboxes = rotate_bboxes_to_0deg(image_idx, file_path, bboxes)
+            bboxes = BoundingBoxHandler.WidthOverHeightFilter(bboxes, max_ratio=args['max_woh'])
             file.write(f'{final_path}\t{bboxes}\n')
 
     elif args['direction'] == 'both':
@@ -96,10 +102,14 @@ with open(output_path, 'w', encoding='utf-8') as file:
 
             bboxes_1 = rotate_bboxes_to_0deg(image_idx, file_path_1, bboxes_1)
             bboxes_2 = rotate_bboxes_to_0deg(image_idx + 1, file_path_2, bboxes_2)
-            bboxes = BoundingBoxHandler.NonMaximumSuppression(
+            final_bboxes = BoundingBoxHandler.WidthOverHeightFilter(
                 bboxes_1 + bboxes_2,
-                threshold = args['threshold'],
-                inverse_idxs = args['nms_inverse_idxs']
+                max_ratio = args['max_woh']
+            )
+            final_bboxes = BoundingBoxHandler.NonMaximumSuppression(
+                final_bboxes,
+                threshold = args['overlap'],
+                inverse_idxs = args['nms_inverse']
             )
             print('=> Merged', 'rotated bouding boxes for', final_path)
-            file.write(f'{final_path}\t{bboxes}\n')
+            file.write(f'{final_path}\t{final_bboxes}\n')

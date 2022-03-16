@@ -146,3 +146,13 @@ class BoundingBoxHandler:
         # Return only the bounding boxes that were picked using the integer data type
         if not inverse_idxs: return pick_bboxes
         return [bbox for idx, bbox in enumerate(bboxes) if idx not in pick_idxs]
+
+    @staticmethod
+    def WidthOverHeightFilter(bboxes, max_ratio=0.5): 
+        new_bboxes = []
+        for bbox in bboxes:
+            (tl, tr, br, bl) = bbox['points']
+            w = max(0, br[0] - tl[0] + 1)
+            h = max(0, br[1] - tl[1] + 1)
+            if w / h < max_ratio: new_bboxes.append(bbox)
+        return new_bboxes
