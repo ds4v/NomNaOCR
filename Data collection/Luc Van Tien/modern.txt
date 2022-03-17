@@ -18,7 +18,7 @@ Bấy lâu cửa thánh dựa kề
 Đã tươi khí tượng lại xuê tinh thần
 Nay đà gặp hội phong vân
 Người người ai cũng lập thân buổi nàỵ
-Chí --- bắn nhạn ven mây
+Chí - bắn nhạn ven mây
 Danh tôi đã rạng, tiếng thầy đồn xa
 Làm trai trong cõi người ta
 Trước lo báo bổ, sau là hiển vinh
@@ -121,7 +121,7 @@ Qua xem mặt bậu thơ ngây đã đành
 E khi vẽ hổ bất thành
 Khi không mình lại chôn mình vào hang.
 Vân Tiên đứng lại bên đàng
-Bẻ cây làm gậy --- ngàn chạy vô
+Bẻ cây làm gậy - ngàn chạy vô
 Kêu rằng hỡi đảng hung đồ
 Chớ quen thói dữ Mạc Hồ hại dân
 Phong Lai mặt đỏ bừng bừng
@@ -882,7 +882,7 @@ Trịnh Hâm ở dạ gươm đao
 Bắt người đồng tử buộc vào trong cây
 Trước cho cọp hùm ăn mày
 Hại Tiên sau dụng mưu này mới xong
-Vân Tiên những --- đợi trông
+Vân Tiên những - đợi trông
 Trịnh Hâm về nói tiểu đồng cọp ăn
 Vân Tiên than khóc ngã lăn
 Có đâu đất lỡ tr ời băng thình lình
@@ -913,7 +913,7 @@ Dò ra chốn cũ tìm thầy Vân Tiên
 Mặt trời vừa lạc mái hiên
 Người buôn kẻ bán chợ phiên nhộn nhàng
 Đồng rằng: Bà quán giữa đường
-Sớm qua có thấy người tang chăng là-
+Sớm qua có thấy người tang chăng là?
 Quán rằng: Thôi đã ra ma
 Khi may làng xóm vội đà chôn đi
 Đồng rằng biết chốn nào ra
@@ -1117,7 +1117,7 @@ Nay đà sáu bữa chẳng hòa mùi chi
 Lại thêm lũ lượt tứ chi
 Muốn đi theo đó mà đi khôn dời
 Lão tiều đây ngửa nón tơi
-Mở ra cơm gói mời -khuyên- Vân Tiên
+Mở ra cơm gói mời [khuyên] Vân Tiên
 Trong mình ăn uống đã yên
 Lão ra sức mạnh cõng Tiên về nhà
 Khỏi rừng ra tới đầu đường
@@ -1425,7 +1425,7 @@ Ban cho tiền bạc cấp hầu đưa đi
 Lục ông ra rước một khi
 Nguyệt Nga vào đặt lễ nghi sẵn sang
 Ngày lành tắm gội lên đàn
-Ăn về -lìa- đất cho chàng Vân Tiên
+Ăn về [lìa] đất cho chàng Vân Tiên
 Mở ra bức tượng treo lên
 Trong nhà cho tới xóm làng đều thương
 Nguyệt Nga bôn tiếng khóc chàng
@@ -1790,7 +1790,7 @@ Xẩy nghe nhạc ngựa ở đâu tới nhà
 Kêu rằng ai ở trong nhà
 Đường về quan ải chỉ ra cho mình
 Nguyệt Nga ngồi sợ làm thinh
-Trạng nguyên xuống ngựa tay --- lần vào
+Trạng nguyên xuống ngựa tay - lần vào
 Lão bà dậy hỏi người nao
 Đêm khuya lạ mặt dám vào nhà ta
 Rằng tôi quốc trạng Sở gia
@@ -1992,7 +1992,7 @@ Bấy lâu luống chịu âm hao rãi rầu
 Bày lời tự sự đuôi đầu
 Ba năm luống chịu thảm sầu tới nay
 Bây giờ tớ đã gặp thầy
-Vinh hoa một thuở xum --- cơn mầu
+Vinh hoa một thuở xum - cơn mầu
 Trạng nguyên xa giá rẽ lên
 Phút đâu đã tới gần miền Tần Giang
 Võ công từ xuống suối vàng

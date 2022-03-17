@@ -31,7 +31,9 @@ with open(url_path, 'w', encoding='utf-8') as url_file, \
     for page in data:
         url_file.write(base_url + page['url'] + '\n')
         text = page['text'].replace('\n\n', '\n')
-        text = re.sub(r'[\[\?\]]', '-', text).split('\n')
+        # Unknown characters represented by ['[?]', '?', '-'] on the website
+        # Note: this not remove the '?' characters at the of a sentence or a quote
+        text = re.sub(r'(\[\?\]|\?(?!\n|"))', '-', text).split('\n')
 
         for idx, sentence in enumerate(text):
             sentence = sentence.strip()
