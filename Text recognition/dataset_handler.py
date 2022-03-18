@@ -26,10 +26,9 @@ def create_dataset(dataset_dir, labels_path, sim2tra=True):
             text = text.strip().lower()
             if os.path.getsize(img_path) and is_clean_text(text):
                 if sim2tra: text = converter.convert(text)
-                if img_path not in img_paths: # Just for safety
-                    img_paths.append(img_path)
-                    labels.append(text)
-                    for char in text: vocabs[char] += 1
+                img_paths.append(img_path)
+                labels.append(text)
+                for char in text: vocabs[char] += 1
             
     vocabs = dict(sorted(
         vocabs.items(),
