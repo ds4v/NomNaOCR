@@ -1,9 +1,16 @@
 import os
+import re
 import opencc
 import numpy as np
 import tensorflow as tf
 from string import punctuation
 from collections import defaultdict
+
+
+def is_clean_text(text):
+    not_nom_chars = r'\sA-Za-z0-9áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệóòỏõọôốồổỗộơớờởỡợíìỉĩịúùủũụưứừửữựýỳỷỹỵđ'
+    pattern = re.compile(f'[{not_nom_chars}{re.escape(punctuation)}]')
+    return not bool(re.search(pattern, text))
 
 
 def create_dataset(dataset_dir, labels_path, sim2tra=True):
@@ -16,8 +23,8 @@ def create_dataset(dataset_dir, labels_path, sim2tra=True):
             img_name, text = line.rstrip('\n').split('\t')
             img_path = os.path.join(dataset_dir, img_name)
 
-            if os.path.getsize(img_path) and \
-                not any(char in text for char in punctuation):
+            text = text.strip().lower()
+            if os.path.getsize(img_path) and is_clean_text(text):
                 if sim2tra: text = converter.convert(text)
                 if img_path not in img_paths: # Just for safety
                     img_paths.append(img_path)
