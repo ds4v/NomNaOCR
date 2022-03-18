@@ -11,7 +11,7 @@ ap.add_argument(
     type = FileType('r', encoding='utf-8')
 )
 args = vars(ap.parse_args())
-# Example: python json2txt.py --infile "Tale of Kieu version 1866/automa.json"
+# Example: python json2txt.py --infile "Tale of Kieu version 1872/automa.json"
 
 out_dir = os.path.dirname(args['infile'].name)
 data = json.load(args['infile'])
@@ -30,7 +30,7 @@ with open(url_path, 'w', encoding='utf-8') as url_file, \
 
     for page in data:
         url_file.write(base_url + page['url'] + '\n')
-        text = page['text'].replace('\n\n', '\n')
+        text = re.sub(r'\n(\n|[0-9 ]+)', '\n', page['text'])
         # Unknown characters represented by ['[?]', '?', '-'] on the website
         # Note: this not remove the '?' characters at the of a sentence or a quote
         # text = re.sub(r'(\[\?\]|\?(?!\n|"))', '-', text)
