@@ -21,18 +21,18 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
             fontdict['color'] = 'dodgerblue'
             plt.text(text_x, text_y, actual_char, fontdict=fontdict)
         else:
-            if end + 1 < label_length and pred_label[end] == label[end + 1]:
+            if end < pred_length and end + 1 < label_length and \
+                pred_label[end] == label[end + 1]:
                 fontdict['color'] = 'gray'
                 plt.text(text_x, text_y, actual_char, fontdict=fontdict)
-            else:
-                if end < len(pred_label):
-                    fontdict['color'] = 'red'
-                    plt.text(text_x, text_y, pred_label[end], fontdict=fontdict)
-                    fontdict['color'] = 'black'
-                    plt.text(text_x + 20, text_y, actual_char, fontdict=fontdict)
-                else: 
-                    fontdict['color'] = 'gray'
-                    plt.text(text_x, text_y, actual_char, fontdict=fontdict)
+            elif end < pred_length:
+                fontdict['color'] = 'red'
+                plt.text(text_x, text_y, pred_label[end], fontdict=fontdict)
+                fontdict['color'] = 'black'
+                plt.text(text_x + 20, text_y, actual_char, fontdict=fontdict)
+            else: 
+                fontdict['color'] = 'gray'
+                plt.text(text_x, text_y, actual_char, fontdict=fontdict)
             start = end + 1
         end += 1
 
