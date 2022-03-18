@@ -36,12 +36,12 @@ args = vars(ap.parse_args())
 
 '''Example:
 python unrotated_convertor.py \
-    -i "../../Dataset/Tale of Kieu version 1866 - Rotate/Cache.cach" \
-    -o "../../Dataset/Tale of Kieu version 1866/Cache.cach" \
+    -i "../../Dataset/Tale of Kieu version 1872 - Rotate/Cache.cach" \
+    -o "../../Dataset/Tale of Kieu version 1872/Cache.cach" \
     -d "both" \
     --max_woh 0.25 \
     --overlap 0.7 \
-    --nms_inverse 0
+    --nms_inverse 1
 '''
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
