@@ -11,7 +11,7 @@ ap.add_argument(
     type = FileType('r', encoding='utf-8')
 )
 args = vars(ap.parse_args())
-# Example: python automa2txt.py --infile "Tale of Kieu version 1872/automa.json"
+# Example: python automa2txt.py --infile "Tale of Kieu version 1871/automa.json"
 
 out_dir = os.path.dirname(args['infile'].name)
 data = json.load(args['infile'])
