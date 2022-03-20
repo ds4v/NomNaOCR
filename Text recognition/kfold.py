@@ -16,11 +16,10 @@ def kfold_decorator(n_splits, random_state=None):
                 reset_model = tf.keras.models.clone_model(model)
                 reset_model._name = f'Model_{fold_idx + 1}'
 
-                print(f'Start training for Fold {fold_idx + 1:02d}:')
+                print(f'============== Fold {fold_idx + 1:02d} training ==============')
                 valid_tf_dataset, best_epoch, edist_log, history = func(
                     reset_model, img_paths, labels, train_idx, valid_idx
                 )
-                print(f'Finish training for Fold {fold_idx + 1:02d}\n')
 
                 valid_datasets.append((valid_tf_dataset, valid_idx))
                 best_epochs.append(best_epoch)
@@ -44,6 +43,7 @@ def get_best_fold(valid_datasets, best_epochs, edist_logs, histories, models):
             
     return (
         valid_datasets[best_fold_idx], 
+        best_epochs[best_fold_idx],
         edist_logs[best_fold_idx], 
         histories[best_fold_idx],
         models[best_fold_idx],

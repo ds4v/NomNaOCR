@@ -13,7 +13,7 @@ def is_clean_text(text):
     return not bool(re.search(pattern, text))
 
 
-def create_dataset(dataset_dir, labels_path, sim2tra=True):
+def create_dataset(dataset_dir, labels_path, sim2tra=False):
     converter = opencc.OpenCC('s2t.json')
     img_paths, labels = [], []
     vocabs = defaultdict(int)

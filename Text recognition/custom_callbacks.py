@@ -67,8 +67,8 @@ class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
                 self.stopped_epoch = epoch
                 self.model.stop_training = True
                 self.model.set_weights(self.best_weights)
-                print('Restored weights from the end of epoch:', self.best_epoch + 1)
-
+                
     def on_train_end(self, logs=None):
         if self.stopped_epoch > 0:
-            print(f'Epoch {self.stopped_epoch + 1}: early stopping')
+            print(f'Early stopping and restored the model weights from the end of ' 
+                  f'epoch {self.best_epoch + 1} - loss: {self.best_loss}\n')
