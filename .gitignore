@@ -1,8 +1,5 @@
 __pycache__/
 .ipynb_checkpoints
-Dataset
-*.zip
-*.jpg
+Dataset/*
 *.h5
 *.ttf
-!PPOCRLabel.zip
