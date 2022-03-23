@@ -1,8 +1,9 @@
 import tensorflow as tf
+from tensorflow.keras.models import clone_model
 from sklearn.model_selection import KFold
 
 
-def kfold_decorator(n_splits, random_state=None):
+def kfold_decorator(n_splits, random_state=None, is_subclassed_model=False):
     kf = KFold(n_splits=n_splits, random_state=random_state, shuffle=True)
     valid_datasets = []
     best_epochs = []
@@ -13,11 +14,12 @@ def kfold_decorator(n_splits, random_state=None):
     def decorator(func):
         def wrapper(model, img_paths, labels, *args, **kwargs):
             for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(img_paths, labels)):
-                reset_model = tf.keras.models.clone_model(model)
+                if not is_subclassed_model: reset_model = clone_model(model)
+                else: reset_model = model.__class__.from_config(model.get_config())
                 reset_model._name = f'Model_{fold_idx + 1}'
 
                 print(f'============== Fold {fold_idx + 1:02d} training ==============')
-                valid_tf_dataset, best_epoch, edist_log, history = func(
+                valid_tf_dataset, best_epoch, edist_log, history, reset_model = func(
                     reset_model, img_paths, labels, train_idx, valid_idx
                 )
 

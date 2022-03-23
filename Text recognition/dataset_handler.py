@@ -1,6 +1,5 @@
 import os
 import re
-import opencc
 import numpy as np
 import tensorflow as tf
 from string import punctuation
@@ -13,8 +12,7 @@ def is_clean_text(text):
     return not bool(re.search(pattern, text))
 
 
-def create_dataset(dataset_dir, labels_path, sim2tra=False):
-    converter = opencc.OpenCC('s2t.json')
+def create_dataset(dataset_dir, labels_path, min_length=4):
     img_paths, labels = [], []
     vocabs = defaultdict(int)
 
@@ -24,8 +22,7 @@ def create_dataset(dataset_dir, labels_path, sim2tra=False):
             img_path = os.path.join(dataset_dir, img_name)
 
             text = text.strip().lower()
-            if os.path.getsize(img_path) and is_clean_text(text):
-                if sim2tra: text = converter.convert(text)
+            if os.path.getsize(img_path) and len(text) >= min_length and is_clean_text(text):
                 img_paths.append(img_path)
                 labels.append(text)
                 for char in text: vocabs[char] += 1
