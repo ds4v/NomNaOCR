@@ -27,14 +27,15 @@ class EditDistanceCallback(tf.keras.callbacks.Callback):
         sparse_preds = tf.cast(tf.sparse.from_dense(preds_decoded), dtype='int64')
 
         # Compute individual edit distances and average them out.
+        # https://stackoverflow.com/questions/51612489
         edit_distances = tf.edit_distance(sparse_preds, sparse_labels, normalize=False)
         return tf.reduce_mean(edit_distances).numpy()
 
     def on_epoch_end(self, epoch, logs=None):
         edit_distances = []
-        for i in range(len(self.images)):
-            preds = self.prediction_model.predict(self.images[i])
-            edit_distances.append(self._calculate_edit_distance(self.labels[i], preds))
+        for batch_images, batch_labels in zip(self.images, self.labels):
+            preds = self.prediction_model.predict(batch_images)
+            edit_distances.append(self._calculate_edit_distance(batch_labels, preds))
 
         mean_edit_distances = np.mean(edit_distances)
         self.logs.append(mean_edit_distances)
@@ -71,4 +72,4 @@ class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
     def on_train_end(self, logs=None):
         if self.stopped_epoch > 0:
             print(f'Early stopping and restored the model weights from the end of ' 
-                  f'epoch {self.best_epoch + 1} - loss: {self.best_loss}\n')
+                  f'epoch {self.best_epoch + 1} - val_loss: {self.best_loss}\n')
