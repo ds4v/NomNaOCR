@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow.keras.models import clone_model
 from sklearn.model_selection import KFold
 
 
@@ -14,8 +13,8 @@ def kfold_decorator(n_splits, random_state=None, is_subclassed_model=False):
     def decorator(func):
         def wrapper(model, img_paths, labels, *args, **kwargs):
             for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(img_paths, labels)):
-                if not is_subclassed_model: reset_model = clone_model(model)
-                else: reset_model = model.__class__.from_config(model.get_config())
+                if is_subclassed_model: reset_model = model.__class__.from_config({})
+                else: reset_model = tf.keras.models.clone_model(model)
                 reset_model._name = f'Model_{fold_idx + 1}'
 
                 print(f'============== Fold {fold_idx + 1:02d} training ==============')
