@@ -16,17 +16,23 @@ class CTCLayer(tf.keras.layers.Layer):
         self.add_loss(loss)
         return y_pred  # At test time, just return the computed predictions.
         
-        
-def decode_batch_predictions(preds, max_length, beam_width, num2char_func):
+
+def ctc_decode(predictions, max_length, beam_width=20):
+    input_length = np.ones(predictions.shape[0]) * predictions.shape[1]
     preds_decoded = tf.keras.backend.ctc_decode(
-        preds,
-        input_length = np.ones(preds.shape[0]) * preds.shape[1],
-        greedy = False,
+        predictions,
+        input_length = input_length,
+        greedy = True,
         beam_width = beam_width
     )[0][0][:, :max_length]
+    return preds_decoded
+
+
+def decode_batch_predictions(preds, max_length, beam_width, num2char_func):
+    preds_decoded = ctc_decode(preds, max_length, beam_width)
+    output_text = []
 
     # Iterate over the results and get back the text
-    output_text = []
     for result in preds_decoded:
         result = tf.gather(result, tf.where(tf.math.not_equal(result, -1)))
         result = tf.strings.reduce_join(num2char_func(result))

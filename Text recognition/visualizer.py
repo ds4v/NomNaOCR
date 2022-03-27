@@ -39,8 +39,8 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
 
 def visualize_images_labels(
     img_paths, 
-    labels, 
-    pred_labels = None, 
+    labels, # shape == (batch_size, max_length)
+    pred_labels = None, # shape == (batch_size, max_length)
     figsize = (15, 7),
     subplot_size = (2, 8), 
     show_legend = True, # Only for predictions

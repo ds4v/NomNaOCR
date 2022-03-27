@@ -37,7 +37,17 @@ def get_best_fold(valid_datasets, best_epochs, edist_logs, histories, models):
     for fold_idx, model in enumerate(models):
         final_edist = edist_logs[fold_idx][best_epochs[fold_idx]]
         print(f'Fold {fold_idx + 1:02d} - Mean edit distance: {final_edist}')
-        final_val_loss = model.evaluate(valid_datasets[fold_idx][0], verbose=1)
+
+        steps = None
+        valid_tf_dataset, valid_idx = valid_datasets[fold_idx]
+        dataset_size = tf.data.experimental.cardinality(valid_tf_dataset).numpy()
+
+        if dataset_size == tf.data.experimental.INFINITE_CARDINALITY:
+            for batch in valid_tf_dataset.take(1): 
+                batch_size = batch['image'].shape[0]
+            steps = len(valid_idx) // batch_size
+
+        final_val_loss = model.evaluate(valid_tf_dataset, steps=steps, verbose=1)
         if final_val_loss < best_loss:
             best_loss = final_val_loss
             best_fold_idx = fold_idx

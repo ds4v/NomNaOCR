@@ -1,30 +1,33 @@
 import numpy as np
 import tensorflow as tf
+from ctc import ctc_decode
 
 
 class EditDistanceCallback(tf.keras.callbacks.Callback):
-    def __init__(self, prediction_model, tf_dataset, max_length):
+    def __init__(
+        self, 
+        prediction_model, 
+        valid_tf_dataset, 
+        max_length, 
+        use_ctc_decode = False, # Need to decode predictions if CTC loss used
+        beam_width = 20 # Required if use_ctc_decode == True
+    ):
         super(EditDistanceCallback, self).__init__()
         self.prediction_model = prediction_model
         self.max_length = max_length
+        self.use_ctc_decode = use_ctc_decode
+        self.beam_width = beam_width
         self.logs = []
 
         self.images, self.labels = [], []
-        for batch in tf_dataset:
+        for batch in valid_tf_dataset: 
             self.images.append(batch['image'])
             self.labels.append(batch['label'])
 
-    def _calculate_edit_distance(self, labels, predictions):
-        # Make predictions and convert them to sparse tensors.
-        preds_decoded = tf.keras.backend.ctc_decode(
-            predictions,
-            input_length = np.ones(predictions.shape[0]) * predictions.shape[1],
-            greedy = True
-        )[0][0][:, :self.max_length]
-
+    def _calculate_edit_distance(self, labels, preds):
         # Get a single batch and convert its labels to sparse tensors.
         sparse_labels = tf.cast(tf.sparse.from_dense(labels), dtype='int64')
-        sparse_preds = tf.cast(tf.sparse.from_dense(preds_decoded), dtype='int64')
+        sparse_preds = tf.cast(tf.sparse.from_dense(preds), dtype='int64')
 
         # Compute individual edit distances and average them out.
         # https://stackoverflow.com/questions/51612489
@@ -35,6 +38,8 @@ class EditDistanceCallback(tf.keras.callbacks.Callback):
         edit_distances = []
         for batch_images, batch_labels in zip(self.images, self.labels):
             preds = self.prediction_model.predict(batch_images)
+            if self.use_ctc_decode: 
+                preds = ctc_decode(preds, self.max_length, self.beam_width)
             edit_distances.append(self._calculate_edit_distance(batch_labels, preds))
 
         mean_edit_distances = np.mean(edit_distances)
@@ -43,9 +48,10 @@ class EditDistanceCallback(tf.keras.callbacks.Callback):
 
 
 class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
-    def __init__(self, patience=0):
+    def __init__(self, patience=0, stuck_str=None):
         super(EarlyStoppingWithStuck, self).__init__()
         self.patience = patience
+        self.stuck_str = stuck_str
         self.best_weights = None
 
     def on_train_begin(self, logs=None):
@@ -56,8 +62,7 @@ class EarlyStoppingWithStuck(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         loss, val_loss = logs.get('loss'), logs.get('val_loss')
-        stuck = val_loss - loss >= 10 or (epoch > 5 and val_loss > 30)
-        if np.less(val_loss, self.best_loss) and not stuck:
+        if np.less(val_loss, self.best_loss) and not eval(self.stuck_str):
             self.wait = 0
             self.best_loss = val_loss
             self.best_epoch = epoch
