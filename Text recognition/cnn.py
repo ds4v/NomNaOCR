@@ -8,7 +8,7 @@ def get_imagenet_model(model_name, input_shape):
     return base_model(input_shape=input_shape, weights=None, include_top=False)
 
 
-def custom_cnn(config, image_input, dim_to_keep=-1):
+def custom_cnn(config, image_input, use_extra_conv=True):
     # Convolution layer with BatchNormalization and LeakyReLU activation
     def _conv_bn_leaky(input_layer, filters, block_name, conv_idx, is_last=False):
         x = Conv2D(
@@ -30,10 +30,10 @@ def custom_cnn(config, image_input, dim_to_keep=-1):
         x = MaxPooling2D(pool_size, name=f'{block_name}_pool')(x)
 
     # Last Convolution has 2x2 kernel with no padding and no followed MaxPooling layer
-    return _conv_bn_leaky(x, filters, 'final', '', True)
+    return _conv_bn_leaky(x, filters, 'final', '', True) if use_extra_conv else x
 
 
-def reshape_for_cnn(last_cnn_layer, dim_to_keep):
+def reshape_for_rnn(last_cnn_layer, dim_to_keep=-1):
     # Reshape accordingly before passing the output to the RNN part
     _, height, width, channel = last_cnn_layer.get_shape()
     if dim_to_keep == 1:
