@@ -12,12 +12,12 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
         plt.text(text_x, 0, '\n'.join(pred_label), fontdict=fontdict)
         return 
 
-    start, end = 0, 0
+    pred_start, start, end = 0, 0, 0
     while start <= end < label_length:
         text_y = end * label_length * 3
         actual_char = '[UNK]' if label[end] == '?' else label[end]
 
-        if label[start:end + 1] in pred_label:
+        if label[start:end + 1] in pred_label[pred_start:pred_length]:
             fontdict['color'] = 'dodgerblue'
             plt.text(text_x, text_y, actual_char, fontdict=fontdict)
         else:
@@ -33,6 +33,8 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
             else: 
                 fontdict['color'] = 'gray'
                 plt.text(text_x, text_y, actual_char, fontdict=fontdict)
+                
+            pred_start = end
             start = end + 1
         end += 1
 
@@ -42,12 +44,12 @@ def visualize_images_labels(
     labels, # shape == (batch_size, max_length)
     pred_labels = None, # shape == (batch_size, max_length)
     figsize = (15, 7),
-    subplot_size = (2, 8), 
+    subplot_size = (2, 8), # tuple: (rows, columns) to display
     show_legend = True, # Only for predictions
     font_path = None, 
-    text_x = None
+    text_x = None # Position of actual label to plot
 ):
-    nrows, ncols = subplot_size # tuple: (rows, columns) to display
+    nrows, ncols = subplot_size 
     num_of_labels = len(labels)
     assert len(img_paths) == num_of_labels, 'img_paths and labels must have same number of items'
     assert nrows * ncols <= num_of_labels, f'nrows * ncols must be <= {num_of_labels}'
@@ -90,15 +92,18 @@ def visualize_images_labels(
         )
 
 
-def plot_training_results(history, edist_logs, save_name='history.png'):
-    fig = plt.figure(figsize=(15, 5))
-    loss, val_loss = history.history['loss'], history.history['val_loss']
+def plot_training_results(history, save_name, edist_metric_name='edist', figsize=(15, 5)):
+    fig = plt.figure(figsize=figsize)
+    edist, val_edist = history[edist_metric_name], history[f'val_{edist_metric_name}']
+    loss, val_loss = history['loss'], history['val_loss']
 
     plt.subplot(1, 2, 1)
-    plt.plot(edist_logs, linestyle='solid', marker='o', color='dodgerblue')
+    plt.plot(edist, linestyle='solid', marker='o', color='crimson', label='Train')
+    plt.plot(val_edist, linestyle='solid', marker='o', color='dodgerblue', label='Validation')
     plt.xlabel('Epochs', fontsize=14)
     plt.ylabel('Mean Edit Distance', fontsize=14)
-    plt.title('Validation Edit Distance', fontsize=18)
+    plt.title('Average Levenshtein Distance', fontsize=18)
+    plt.legend(loc='best')
 
     plt.subplot(1, 2, 2)
     plt.plot(loss, linestyle='solid', marker='o', color='crimson', label='Train')
