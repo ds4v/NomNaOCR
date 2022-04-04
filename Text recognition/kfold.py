@@ -12,17 +12,17 @@ def kfold_decorator(n_splits, random_state=None, is_subclassed_model=False):
 
     def decorator(func):
         def wrapper(model, img_paths, labels, *args, **kwargs):
-            for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(img_paths, labels)):
+            for fold_idx, (train_idxs, valid_idxs) in enumerate(kf.split(img_paths, labels)):
                 if not is_subclassed_model: reset_model = clone_model(model) 
                 else: reset_model = model.__class__.from_config(model.get_config())
 
                 reset_model._name = f'Model_{fold_idx + 1:02d}'
                 print(f'============== Fold {fold_idx + 1:02d} training ==============')
                 valid_tf_dataset, best_epoch, history, reset_model = func(
-                    reset_model, img_paths, labels, train_idx, valid_idx
+                    reset_model, img_paths, labels, train_idxs, valid_idxs
                 )
 
-                valid_datasets.append((valid_tf_dataset, valid_idx))
+                valid_datasets.append((valid_tf_dataset, valid_idxs))
                 best_epochs.append(best_epoch)
                 histories.append(history)
                 models.append(reset_model)
@@ -35,13 +35,13 @@ def get_best_fold(valid_datasets, best_epochs, histories, models, verbose=1):
     best_loss = float('inf')
     for fold_idx, model in enumerate(models):
         steps = None
-        valid_tf_dataset, valid_idx = valid_datasets[fold_idx]
+        valid_tf_dataset, valid_idxs = valid_datasets[fold_idx]
         dataset_size = tf.data.experimental.cardinality(valid_tf_dataset).numpy()
 
         if dataset_size == tf.data.experimental.INFINITE_CARDINALITY:
             for batch in valid_tf_dataset.take(1): 
                 batch_size = batch['image'].shape[0]
-            steps = len(valid_idx) // batch_size
+            steps = len(valid_idxs) // batch_size
 
         final_val_loss = model.evaluate(valid_tf_dataset, steps=steps, verbose=verbose)[1]
         if final_val_loss < best_loss:
