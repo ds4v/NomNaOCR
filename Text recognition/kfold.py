@@ -43,9 +43,9 @@ def get_best_fold(valid_datasets, best_epochs, histories, models, verbose=1):
                 batch_size = batch['image'].shape[0]
             steps = len(valid_idxs) // batch_size
 
-        final_val_loss = model.evaluate(valid_tf_dataset, steps=steps, verbose=verbose)[1]
-        if final_val_loss < best_loss:
-            best_loss = final_val_loss
+        result = model.evaluate(valid_tf_dataset, steps=steps, verbose=verbose, return_dict=True)
+        if result['loss'] < best_loss:
+            best_loss = result['loss']
             best_fold_idx = fold_idx
             
     return (
