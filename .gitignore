@@ -1,6 +1,7 @@
 __pycache__/
 .ipynb_checkpoints
 Dataset/*
+!History of Greater Vietnam
 !Tale of Kieu version 1871.zip
 !Tale of Kieu version 1872.zip
 !Luc Van Tien.zip
