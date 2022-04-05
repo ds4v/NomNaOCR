@@ -2,6 +2,8 @@ import os
 import re
 import numpy as np
 import tensorflow as tf
+
+from utils import ctc_decode
 from string import punctuation
 from collections import defaultdict, Counter
 
@@ -69,7 +71,7 @@ class DataImporter:
         )
 
 
-class DataInputPipeline:
+class DataHandler:
     def __init__(self, dataset: DataImporter, img_size: tuple, padding_char, start_char='', end_char=''):
         self.img_paths = dataset.img_paths
         self.labels = dataset.labels
@@ -161,16 +163,21 @@ class DataInputPipeline:
         return dataset.batch(batch_size, drop_remainder).cache().prefetch(tf.data.AUTOTUNE)  
 
 
-    def tokens2texts(self, batch_tokens):
+    def tokens2texts(self, batch_tokens, use_ctc_decode=False):
         batch_texts = []
+        if use_ctc_decode: 
+            batch_tokens = ctc_decode(batch_tokens, self.max_length)
+
+        # Iterate over the results and get back the text
         for tokens in batch_tokens:
-            # Gather indices where label != padding_token.
-            not_padding = tf.math.not_equal(tokens, self.padding_token)
-            indices = tf.gather(tokens, tf.where(not_padding))
+            indices = tf.gather(tokens, tf.where(tf.logical_and(
+                tokens != self.padding_token, 
+                tokens != -1 # For blank labels if use_ctc_decode 
+            )))
 
             # Convert to string
             text = tf.strings.reduce_join(self.num2char(indices)) 
             text = text.numpy().decode('utf-8')
             text = text.replace(self.start_char, '').replace(self.end_char, '')
             batch_texts.append(text)
-        return batch_texts  
+        return batch_texts 
