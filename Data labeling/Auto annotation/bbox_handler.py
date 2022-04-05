@@ -97,7 +97,7 @@ class BoundingBoxHandler:
 
     # https://pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python
     @staticmethod
-    def NonMaximumSuppression(bboxes, threshold, inverse_idxs=False):
+    def NonMaximumSuppression(bboxes, threshold):
         if len(bboxes) == 0: return []
         points_in_bboxes = np.array([bbox['points'] for bbox in bboxes])
         pick_idxs = []  # Initialize the list of picked indexes
@@ -143,9 +143,9 @@ class BoundingBoxHandler:
                 np.where(overlap > threshold)[0]
             )))
 
-        # Return only the bounding boxes that were picked using the integer data type
-        if not inverse_idxs: return pick_bboxes
-        return [bbox for idx, bbox in enumerate(bboxes) if idx not in pick_idxs]
+        # Return only the bounding boxes that 
+        # were picked using the integer data type
+        return pick_bboxes
 
     @staticmethod
     def WidthOverHeightFilter(bboxes, max_ratio=0.5): 

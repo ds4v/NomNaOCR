@@ -26,12 +26,6 @@ ap.add_argument(
     type = float,
     help = '(Required if direction == "both") Overlap threshold to suppress'
 )
-ap.add_argument(
-    '--nms_inverse', # Sometimes the non-maximum boxes fit the sentence better
-    required = 'both' in sys.argv[-1],
-    type = lambda val: val.lower() in ('true', 't', '1'),
-    help = '(Required if direction == "both") Inverve indices after NMS or not'
-)
 args = vars(ap.parse_args())
 
 '''Example:
@@ -40,8 +34,7 @@ python unrotated_convertor.py \
     -o "../../Dataset/Tale of Kieu version 1871/Cache.cach" \
     -d "both" \
     --max_woh 0.25 \
-    --overlap 0.5 \
-    --nms_inverse 1
+    --overlap 0.5
 '''
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -109,7 +102,6 @@ with open(output_path, 'w', encoding='utf-8') as file:
             final_bboxes = BoundingBoxHandler.NonMaximumSuppression(
                 final_bboxes,
                 threshold = args['overlap'],
-                inverse_idxs = args['nms_inverse']
             )
             print('=> Merged', 'rotated bouding boxes for', final_path)
             file.write(f'{final_path}\t{final_bboxes}\n')
