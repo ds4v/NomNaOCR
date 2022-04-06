@@ -771,3 +771,17 @@ http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_
 http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_72b.jpg
 http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_73a.jpg
 http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_73b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_74a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_74b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_75a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_75b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_76a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_76b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_77a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_77b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_78a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_78b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_79a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_79b.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_80a.jpg
+http://www.nomfoundation.org/data/image_dvsk/ban_ky_thuc_luc/quyen15/DVSKTT_ban_thuc_XV_80b.jpg
