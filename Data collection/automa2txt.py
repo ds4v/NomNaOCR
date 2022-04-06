@@ -11,7 +11,7 @@ ap.add_argument(
     type = FileType('r', encoding='utf-8')
 )
 args = vars(ap.parse_args())
-# Example: python automa2txt.py --infile "Tale of Kieu version 1871/automa.json"
+# Example: python automa2txt.py --infile "Luc Van Tien/automa.json"
 
 out_dir = os.path.dirname(args['infile'].name)
 data = json.load(args['infile'])
@@ -30,7 +30,13 @@ with open(url_path, 'w', encoding='utf-8') as url_file, \
 
     for page in data:
         url_file.write(base_url + page['url'] + '\n')
-        text = re.sub(r'\n(\n|[0-9 ]+)', '\n', page['text'])
+
+        # Remove line numbers and double new lines
+        text = re.sub(r'\n(\n|[0-9 ]+)', '\n', page['text']) 
+
+        # Remove position notes. Example: [1a*1*1]
+        text = re.sub(r'\. \[[0-9]+[ab]\*[0-9]+\*[0-9]+\]', '', text) 
+
         # Unknown characters represented by ['[?]', '?', '-'] on the website
         # Note: this not remove the '?' characters at the of a sentence or a quote
         # text = re.sub(r'(\[\?\]|\?(?!\n|"))', '-', text)
@@ -41,7 +47,7 @@ with open(url_path, 'w', encoding='utf-8') as url_file, \
             if sentence == '': continue
 
             if idx % 2 == 0: 
-                nom_file.write(sentence + '\n')
+                nom_file.write(sentence.replace(' ', '') + '\n')
                 # vocabs.extend(list(sentence))
             else: modern_file.write(sentence + '\n')
 
