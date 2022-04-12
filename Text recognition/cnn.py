@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2D, BatchNormalization, LeakyReLU, MaxPooling2D, Reshape
+from tensorflow.keras.layers import Conv2D, BatchNormalization, LeakyReLU, MaxPool2D, Reshape
 
 
 def get_imagenet_model(model_name, input_shape):
@@ -10,11 +10,11 @@ def get_imagenet_model(model_name, input_shape):
 
 def custom_cnn(config, image_input, use_extra_conv=True):
     # Convolution layer with BatchNormalization and LeakyReLU activation
-    def _conv_bn_leaky(input_layer, filters, block_name, conv_idx, is_last=False):
+    def _conv_bn_leaky(input_layer, filters, block_name, conv_idx, use_pooling=False):
         x = Conv2D(
             filters = filters,
-            kernel_size = (2, 2) if is_last else (3, 3),
-            padding = 'valid' if is_last else 'same',
+            kernel_size = (2, 2) if not use_pooling else (3, 3),
+            padding = 'valid' if not use_pooling else 'same',
             kernel_initializer = 'he_uniform',
             name = f'{block_name}_conv{conv_idx}'
         )(input_layer)
@@ -26,11 +26,9 @@ def custom_cnn(config, image_input, use_extra_conv=True):
         num_conv, filters, pool_size = block_config.values()
         for conv_idx in range(num_conv):
             input_layer = image_input if idx + conv_idx == 0 else x
-            x = _conv_bn_leaky(input_layer, filters, block_name, conv_idx + 1)
-        x = MaxPooling2D(pool_size, name=f'{block_name}_pool')(x)
-
-    # Last Convolution has 2x2 kernel with no padding and no followed MaxPooling layer
-    return _conv_bn_leaky(x, filters, 'final', '', True) if use_extra_conv else x
+            x = _conv_bn_leaky(input_layer, filters, block_name, conv_idx + 1, pool_size)
+        if pool_size is not None: x = MaxPool2D(pool_size, name=f'{block_name}_pool')(x)
+    return x
 
 
 def reshape_for_rnn(last_cnn_layer, dim_to_keep=-1):
