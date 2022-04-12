@@ -20,10 +20,12 @@ class DataImporter:
                 if os.path.getsize(img_path) and len(text) >= min_length and self.is_clean_text(text):
                     self.img_paths.append(img_path)
                     self.labels.append(text)
-                
+        
+        assert len(self.img_paths) == len(self.labels), 'img_paths and labels must have same size'
         self.img_paths = np.array(self.img_paths)
         self.labels = np.array(self.labels)
         self.vocabs = dict(Counter(''.join(self.labels)).most_common())
+        self.size = len(self.labels)
 
 
     def remove_rare_chars(self, threshold=1):
@@ -44,16 +46,15 @@ class DataImporter:
         idxs_to_remove = np.array(idxs_to_remove)
         self.img_paths = np.delete(self.img_paths, idxs_to_remove)
         self.labels = np.delete(self.labels, idxs_to_remove)
+
+        assert len(self.img_paths) == len(self.labels), 'img_paths and labels must have same size'
         self.vocabs = dict(Counter(''.join(self.labels)).most_common())
+        self.size = len(self.labels)
 
         # Check if there are still rare characters after removing sentences
         smallest_freq = threshold + 1 # If vocabs is empty, the smallest frequency always > threshold
         if len(self.vocabs) >= 1: smallest_freq = list(self.vocabs.values())[-1] 
-        no_more_rares = False if smallest_freq < threshold else True
-
-        assert len(self.img_paths) == len(self.labels), 'img_paths and labels not same size'
-        if no_more_rares: return self
-        return self.remove_rare_chars(threshold)
+        return self.remove_rare_chars(threshold) if smallest_freq < threshold else self
 
 
     def is_clean_text(self, text):
@@ -64,10 +65,11 @@ class DataImporter:
 
     def __str__(self):
         return (
-            f'Number of images found: {len(self.img_paths)}\n'
-            f'Number of labels found: {len(self.labels)}\n'
-            f'Number of unique characters: {len(self.vocabs)}\n'
-            f'Characters present: {self.vocabs}'
+            f'Samples count (not include Latin letters, numbers, punctuations):'
+            f'\n- Number of images found: {len(self.img_paths)}'
+            f'\n- Number of labels found: {len(self.labels)}'
+            f'\n- Number of unique characters: {len(self.vocabs)}'
+            f'\n- Characters present: {self.vocabs}'
         )
 
 
@@ -114,6 +116,7 @@ class DataHandler:
         # Check the amount of padding needed to be done.
         pad_height = h - tf.shape(image)[0]
         pad_width = w - tf.shape(image)[1]
+        if pad_height == 0 and pad_width == 0: return image
 
         # Only necessary if you want to do same amount of padding on both sides.
         if pad_height % 2 != 0:
@@ -137,7 +140,7 @@ class DataHandler:
 
     def process_image(self, img_path):
         image = tf.io.read_file(img_path)
-        image = tf.image.decode_jpeg(image, 1)
+        image = tf.image.decode_jpeg(image, 3)
         image = self.distortion_free_resize(image)
         image = tf.cast(image, tf.float32) / 255.0
         return image
