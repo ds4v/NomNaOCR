@@ -158,12 +158,13 @@ class DataHandler:
         return label
 
 
-    def prepare_tf_dataset(self, idxs, batch_size, drop_remainder=False):
+    def prepare_tf_dataset(self, idxs, batch_size, drop_remainder=False, use_cache=True):
         dataset = tf.data.Dataset.from_tensor_slices((self.img_paths[idxs], self.labels[idxs])).map(
             lambda img_path, label: (self.process_image(img_path), self.process_label(label)),
             num_parallel_calls = tf.data.AUTOTUNE
-        )
-        return dataset.batch(batch_size, drop_remainder).cache().prefetch(tf.data.AUTOTUNE)  
+        ).batch(batch_size, drop_remainder)
+        if use_cache: dataset = dataset.cache()
+        return dataset.prefetch(tf.data.AUTOTUNE)  
 
 
     def tokens2texts(self, batch_tokens, use_ctc_decode=False):
