@@ -9,12 +9,12 @@ class CTCLoss(tf.keras.losses.Loss):
         self.padding_token = padding_token
 
     def call(self, y_true, y_pred):
-        label_length = tf.cast(y_true != self.padding_token, dtype='int64')
+        label_length = tf.cast(y_true != self.padding_token, tf.int64)
         label_length = tf.expand_dims(tf.reduce_sum(label_length, axis=-1), axis=1)
 
-        batch_length = tf.cast(tf.shape(y_true)[0], dtype='int64')
-        pred_length = tf.cast(tf.shape(y_pred)[1], dtype='int64')
-        pred_length *= tf.ones((batch_length, 1), dtype='int64')
+        batch_length = tf.cast(tf.shape(y_true)[0], tf.int64)
+        pred_length = tf.cast(tf.shape(y_pred)[1], tf.int64)
+        pred_length *= tf.ones((batch_length, 1), tf.int64)
         return K.ctc_batch_cost(y_true, y_pred, pred_length, label_length)
 
 
@@ -29,4 +29,7 @@ class MaskedLoss(tf.keras.losses.Loss):
     def __call__(self, y_true, y_pred):
         loss = self.loss(y_true, y_pred)
         mask = tf.cast(y_true != self.padding_token, tf.float32)
-        return tf.reduce_sum(loss * mask) / tf.reduce_sum(mask)
+        return tf.math.divide_no_nan(
+            tf.reduce_sum(loss * mask), 
+            tf.reduce_sum(mask) # Actual sequence length
+        )
