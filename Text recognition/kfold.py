@@ -3,7 +3,7 @@ from tensorflow.keras.models import clone_model
 from sklearn.model_selection import KFold
 
 
-def kfold_decorator(n_splits, random_state=None, is_subclassed_model=False):
+def kfold_decorator(img_paths, labels, n_splits, random_state=None, is_subclassed_model=False):
     kf = KFold(n_splits=n_splits, random_state=random_state, shuffle=True)
     valid_datasets = []
     best_epochs = []
@@ -11,17 +11,13 @@ def kfold_decorator(n_splits, random_state=None, is_subclassed_model=False):
     models = []
 
     def decorator(func):
-        def wrapper(model, img_paths, labels, *args, **kwargs):
+        def wrapper(model, *args, **kwargs):
             for fold_idx, (train_idxs, valid_idxs) in enumerate(kf.split(img_paths, labels)):
                 if not is_subclassed_model: reset_model = clone_model(model) 
                 else: reset_model = model.__class__.from_config(model.get_config())
-
                 reset_model._name = f'Model_{fold_idx + 1:02d}'
                 print(f'============== Fold {fold_idx + 1:02d} training ==============')
-                valid_tf_dataset, best_epoch, history, reset_model = func(
-                    reset_model, img_paths, labels, train_idxs, valid_idxs
-                )
-
+                valid_tf_dataset, best_epoch, history, reset_model = func(reset_model, train_idxs, valid_idxs)
                 valid_datasets.append((valid_tf_dataset, valid_idxs))
                 best_epochs.append(best_epoch)
                 histories.append(history)
