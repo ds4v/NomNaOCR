@@ -14,7 +14,7 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
 
     pred_start, start, end = 0, 0, 0
     while start <= end < label_length:
-        text_y = end * label_length * 3
+        text_y = end * label_length * 5
         actual_char = '[UNK]' if label[end] == '?' else label[end]
 
         if label[start:end + 1] in pred_label[pred_start:pred_length]:
@@ -29,7 +29,7 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
                 fontdict['color'] = 'red'
                 plt.text(text_x, text_y, pred_label[end], fontdict=fontdict)
                 fontdict['color'] = 'black'
-                plt.text(text_x + 20, text_y, actual_char, fontdict=fontdict)
+                plt.text(text_x + 35, text_y, actual_char, fontdict=fontdict)
             else: 
                 fontdict['color'] = 'gray'
                 plt.text(text_x, text_y, actual_char, fontdict=fontdict)
@@ -43,11 +43,12 @@ def visualize_images_labels(
     img_paths, 
     labels, # shape == (batch_size, max_length)
     pred_labels = None, # shape == (batch_size, max_length)
-    figsize = (15, 7),
+    figsize = (15, 8),
     subplot_size = (2, 8), # tuple: (rows, columns) to display
-    show_legend = True, # Only for predictions
+    legend_loc = None, # Only for predictions,
+    annotate_loc = None, # Only for predictions
     font_path = None, 
-    text_x = None # Position of actual label to plot
+    text_x = None # Position to plot actual label
 ):
     nrows, ncols = subplot_size 
     num_of_labels = len(labels)
@@ -72,7 +73,7 @@ def visualize_images_labels(
         else: plt.text(text_x, 0, '\n'.join(label), fontdict=fontdict)
         plt.axis('off')
 
-    if show_legend and pred_labels is not None:
+    if legend_loc and annotate_loc and pred_labels:
         plt.subplots_adjust(left=0, right=0.75)
         plt.legend(handles=[
             Patch(color='green', label='Full match'),
@@ -80,7 +81,7 @@ def visualize_images_labels(
             Patch(color='red', label='Wrong prediction'),
             Patch(color='black', label='Actual character'),
             Patch(color='gray', label='Missing position'),
-        ], loc=(2.7, 1.75))
+        ], loc=legend_loc)
 
         annotate_text = [f'{idx + 1:02d}. {text}' for idx, text in enumerate(pred_labels)]
         plt.annotate(
@@ -88,30 +89,30 @@ def visualize_images_labels(
             fontproperties = FontProperties(fname=font_path),
             xycoords = 'axes fraction',
             fontsize = 14,
-            xy = (2.8, 0),
+            xy = annotate_loc,
         )
 
 
-def plot_training_results(history, save_name, edist_metric_name='edist', figsize=(15, 5)):
+def plot_training_results(history, save_name, figsize=(16, 14), subplot_size=(2, 2)):
+    nrows, ncols = subplot_size
+    assert nrows * ncols <= len(history), f'nrows * ncols must be <= {len(history)}'
     fig = plt.figure(figsize=figsize)
-    edist, val_edist = history[edist_metric_name], history[f'val_{edist_metric_name}']
-    loss, val_loss = history['loss'], history['val_loss']
 
-    plt.subplot(1, 2, 1)
-    plt.plot(edist, linestyle='solid', marker='o', color='crimson', label='Train')
-    plt.plot(val_edist, linestyle='solid', marker='o', color='dodgerblue', label='Validation')
-    plt.xlabel('Epochs', fontsize=14)
-    plt.ylabel('Mean Edit Distance', fontsize=14)
-    plt.title('Average Levenshtein Distance', fontsize=18)
-    plt.legend(loc='best')
+    for idx, name in enumerate(history):
+        if 'val' in name: continue
+        plt.subplot(nrows, ncols, idx + 1)
+        plt.plot(history[name], linestyle='solid', marker='o', color='crimson', label='Train')
+        plt.plot(history[f'val_{name}'], linestyle='solid', marker='o', color='dodgerblue', label='Validation')
+        plt.xlabel('Epochs', fontsize=14)
+        plt.ylabel(name, fontsize=14)
 
-    plt.subplot(1, 2, 2)
-    plt.plot(loss, linestyle='solid', marker='o', color='crimson', label='Train')
-    plt.plot(val_loss, linestyle='solid', marker='o', color='dodgerblue', label='Validation')
-    plt.xlabel('Epochs', fontsize=14)
-    plt.ylabel('Loss', fontsize=14)
-    plt.title('Training Loss', fontsize=18)
-    plt.legend(loc='best')
+        title = name.replace('acc', 'accuracy')\
+                    .replace('seq', 'sequence')\
+                    .replace('char', 'character')\
+                    .replace('edit', 'levenshtein')\
+                    .replace('_', ' ').capitalize()
+        plt.title(title, fontsize=18)
+        plt.legend(loc='best')
 
     fig.savefig(save_name, bbox_inches='tight')
     plt.show()
