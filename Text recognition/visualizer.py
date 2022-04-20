@@ -95,6 +95,7 @@ def visualize_images_labels(
 
 def plot_training_results(history, save_name, figsize=(16, 14), subplot_size=(2, 2)):
     nrows, ncols = subplot_size
+    if 'lr' in history.keys(): del history['lr']
     assert nrows * ncols <= len(history), f'nrows * ncols must be <= {len(history)}'
     fig = plt.figure(figsize=figsize)
 
@@ -107,9 +108,10 @@ def plot_training_results(history, save_name, figsize=(16, 14), subplot_size=(2,
         plt.ylabel(name, fontsize=14)
 
         title = name.replace('acc', 'accuracy')\
-                    .replace('seq', 'sequence')\
-                    .replace('char', 'character')\
-                    .replace('edit', 'levenshtein')\
+                    .replace('seq_', 'sequence_')\
+                    .replace('char_', 'character_')\
+                    .replace('lev_', 'levenshtein_')\
+                    .replace('edit_', 'levenshtein_')\
                     .replace('_', ' ').capitalize()
         plt.title(title, fontsize=18)
         plt.legend(loc='best')
