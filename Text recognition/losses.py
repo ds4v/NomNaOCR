@@ -26,7 +26,7 @@ class MaskedLoss(tf.keras.losses.Loss):
         self.loss = SparseCategoricalCrossentropy(from_logits=True, reduction='none')
         self.padding_token = padding_token
 
-    def __call__(self, y_true, y_pred):
+    def call(self, y_true, y_pred):
         loss = self.loss(y_true, y_pred)
         mask = tf.cast(y_true != self.padding_token, tf.float32)
         return tf.math.divide_no_nan(
