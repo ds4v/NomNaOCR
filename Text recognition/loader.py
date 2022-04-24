@@ -109,7 +109,7 @@ class DataHandler:
             self.max_length += 2 # For [START] and [END] tokens
 
 
-    def distortion_free_resize(self, image):
+    def distortion_free_resize(self, image, align_top=True):
         h, w = self.img_size
         image = tf.image.resize(image, size=(h, w), preserve_aspect_ratio=True)
 
@@ -132,16 +132,16 @@ class DataHandler:
             pad_width_left = pad_width_right = pad_width // 2
 
         return tf.pad(image, paddings=[
-            [pad_height_top, pad_height_bottom],
+            [0, pad_height_top + pad_height_bottom] if align_top else [pad_height_top, pad_height_bottom],
             [pad_width_left, pad_width_right],
             [0, 0],
         ], constant_values=255)  # Pad with white color
 
 
-    def process_image(self, img_path):
+    def process_image(self, img_path, img_align_top=True):
         image = tf.io.read_file(img_path)
         image = tf.image.decode_jpeg(image, 3)
-        image = self.distortion_free_resize(image)
+        image = self.distortion_free_resize(image, img_align_top)
         image = tf.cast(image, tf.float32) / 255.0
         return image
 
@@ -158,11 +158,16 @@ class DataHandler:
         return label
 
 
-    def prepare_tf_dataset(self, idxs, batch_size, drop_remainder=False, use_cache=True):
+    def prepare_tf_dataset(self, idxs, batch_size, drop_remainder=False, img_align_top=True, use_cache=True):
         dataset = tf.data.Dataset.from_tensor_slices((self.img_paths[idxs], self.labels[idxs])).map(
-            lambda img_path, label: (self.process_image(img_path), self.process_label(label)),
-            num_parallel_calls = tf.data.AUTOTUNE
+            lambda img_path, label: (
+                self.process_image(img_path, img_align_top), 
+                self.process_label(label)
+            ), num_parallel_calls = tf.data.AUTOTUNE
         ).batch(batch_size, drop_remainder=drop_remainder)
+
+        # When use .cache(), everything before is saved in the memory. It gives a 
+        # significant boost in speed but only if you can get your hands on a larger RAM
         if use_cache: dataset = dataset.cache()
         return dataset.prefetch(tf.data.AUTOTUNE)  
 
