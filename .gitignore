@@ -1,9 +1,5 @@
 __pycache__/
 .ipynb_checkpoints
 Dataset/*
-!History of Greater Vietnam
-!Tale of Kieu
-!Luc Van Tien.zip
-!trdg.zip
 *.h5
 *.ttf
