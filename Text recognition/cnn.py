@@ -1,5 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2D, BatchNormalization, LeakyReLU, MaxPool2D, Reshape
+from tensorflow.keras.layers import (
+    Conv2D, BatchNormalization, LeakyReLU, MaxPool2D, 
+    Reshape, Permute, Dense, Lambda, RepeatVector, Multiply
+)
 
 
 def get_imagenet_model(model_name, input_shape):
@@ -43,3 +46,14 @@ def reshape_for_rnn(last_cnn_layer, dim_to_keep=-1):
     else:
         raise ValueError('Invalid dim_to_keep value')
     return Reshape(target_shape=(target_shape), name='rnn_input')(last_cnn_layer)
+
+
+# https://pbcquoc.github.io/vietnamese-ocr (Vietnamese blog)
+def visual_attention(feature_maps):
+    _, timestep, input_dim = feature_maps.shape
+    a = Permute((2, 1), name='dim_switching1')(feature_maps)
+    a = Dense(timestep, activation='softmax', name='attention_scores')(a)
+    a = Lambda(lambda x: tf.reduce_sum(x, axis=1), name='dim_reduction')(a)
+    a = RepeatVector(input_dim, name='redistribute')(a)
+    a = Permute((2, 1), name='dim_switching2')(a) 
+    return Multiply(name='context_vector')([feature_maps, a])
