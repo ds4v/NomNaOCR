@@ -1,5 +1,6 @@
 __pycache__/
 .ipynb_checkpoints
 Dataset/*
+*.cach
 *.h5
 *.ttf
