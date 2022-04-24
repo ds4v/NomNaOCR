@@ -1,6 +1,9 @@
 __pycache__/
 .ipynb_checkpoints
 Dataset/*
+Data collection/*
+!automa2txt.py
+!workflow.json
 *.cach
 *.h5
 *.ttf
