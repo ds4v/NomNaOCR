@@ -8,13 +8,18 @@ def ctc_decode(predictions, max_length):
         input_length = input_length,
         greedy = True,
     )[0][0][:, :max_length]
-    return preds_decoded
+    
+    return tf.where(
+        preds_decoded == tf.cast(1, tf.int64),
+        tf.cast(-1, tf.int64), # Treat [UNK] token same as blank label
+        preds_decoded
+    )
 
 
-def tokens2sparse(batch_tokens, padding_token):
+def tokens2sparse(batch_tokens):
     idxs = tf.where(tf.logical_and(
-        batch_tokens != padding_token, 
-        batch_tokens != -1 # For blank labels if use_ctc_decode 
+        batch_tokens != 0, # For [PAD] token
+        batch_tokens != -1 # For blank label if use_ctc_decode 
     ))
     return tf.SparseTensor(
         tf.cast(idxs, tf.int64),

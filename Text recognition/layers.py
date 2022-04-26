@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import (
-    Conv2D, BatchNormalization, LeakyReLU, MaxPool2D, 
-    Reshape, Permute, Dense, Lambda, RepeatVector, Multiply
+    Convolution2D, MaxPooling2D, BatchNormalization, Dense, Multiply,
+    Activation, LeakyReLU, Reshape, Permute, Lambda, RepeatVector
 )
 
 
@@ -11,26 +11,25 @@ def get_imagenet_model(model_name, input_shape):
     return base_model(input_shape=input_shape, weights=None, include_top=False)
 
 
-def custom_cnn(config, image_input, use_extra_conv=True):
-    # Convolution layer with BatchNormalization and LeakyReLU activation
-    def _conv_bn_leaky(input_layer, filters, block_name, conv_idx, use_pooling=False):
-        x = Conv2D(
-            filters = filters,
-            kernel_size = (2, 2) if not use_pooling else (3, 3),
-            padding = 'valid' if not use_pooling else 'same',
-            kernel_initializer = 'he_uniform',
-            name = f'{block_name}_conv{conv_idx}'
-        )(input_layer)
-        x = BatchNormalization(name=f'{block_name}_bn{conv_idx}')(x)
-        return LeakyReLU(alpha=0.2, name=f'{block_name}_activation{conv_idx}')(x)
-
+def custom_cnn(config, image_input, alpha=0):
     # Generate Convolutional blocks by config
     for idx, (block_name, block_config) in enumerate(config.items()):
         num_conv, filters, pool_size = block_config.values()
-        for conv_idx in range(num_conv):
-            input_layer = image_input if idx + conv_idx == 0 else x
-            x = _conv_bn_leaky(input_layer, filters, block_name, conv_idx + 1, pool_size)
-        if pool_size is not None: x = MaxPool2D(pool_size, name=f'{block_name}_pool')(x)
+        for conv_idx in range(1, num_conv + 1):
+            x = Convolution2D(
+                filters = filters,
+                kernel_size = (3, 3) if pool_size else (2, 2),
+                padding = 'same' if pool_size else 'valid',
+                kernel_initializer = 'he_uniform',
+                name = f'{block_name}_conv{conv_idx}'
+            )(image_input if idx + conv_idx == 1 else x)
+
+            x = BatchNormalization(name=f'{block_name}_bn{conv_idx}')(x)
+            if alpha > 0: x = LeakyReLU(alpha, name=f'{block_name}_act{conv_idx}')(x)
+            else: x = Activation('relu', name=f'{block_name}_relu{conv_idx}')(x)
+
+        if pool_size is not None: 
+            x = MaxPooling2D(pool_size, name=f'{block_name}_pool')(x)
     return x
 
 

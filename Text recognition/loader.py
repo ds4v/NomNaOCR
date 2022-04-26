@@ -97,9 +97,9 @@ class DataHandler:
         )
 
         self.max_length = max([len(label) for label in self.labels])
-        self.padding_token = self.char2num(padding_char)
         self.start_token, self.end_token = None, None
         self.start_concat, self.end_concat = [], []
+        mask_idxs = [0, 1] # For [PAD] and [UNK] tokens
 
         if self.start_char != '' and self.end_char != '': 
             self.start_token = self.char2num(start_char)
@@ -107,6 +107,12 @@ class DataHandler:
             self.start_concat = [self.start_token]
             self.end_concat = [self.end_token]
             self.max_length += 2 # For [START] and [END] tokens
+            mask_idxs.append(self.start_token)
+
+        # Prevent from generating padding, unknown, or start when using argmax in model.predict
+        token_mask = np.zeros([self.char2num.vocab_size()], dtype=bool)
+        token_mask[np.array(mask_idxs)] = True
+        self.token_mask = token_mask
 
 
     def distortion_free_resize(self, image, align_top=True):
@@ -135,7 +141,7 @@ class DataHandler:
             [0, pad_height_top + pad_height_bottom] if align_top else [pad_height_top, pad_height_bottom],
             [pad_width_left, pad_width_right],
             [0, 0],
-        ], constant_values=255)  # Pad with white color
+        ], constant_values=255) # Pad with white color
 
 
     def process_image(self, img_path, img_align_top=True):
@@ -153,7 +159,7 @@ class DataHandler:
         label = tf.pad(
             label, 
             paddings = [[0, self.max_length - label_length]], 
-            constant_values = self.padding_token
+            constant_values = 0 # Pad with padding token
         )
         return label
 
@@ -180,8 +186,8 @@ class DataHandler:
         # Iterate over the results and get back the text
         for tokens in batch_tokens:
             indices = tf.gather(tokens, tf.where(tf.logical_and(
-                tokens != self.padding_token, 
-                tokens != -1 # For blank labels if use_ctc_decode 
+                tokens != 0, # For [PAD] token
+                tokens != -1 # For blank label if use_ctc_decode 
             )))
 
             # Convert to string
