@@ -8,3 +8,4 @@ Fine-tuning OCR tools/*
 *.cach
 *.h5
 *.ttf
+preprocess_generator.py
