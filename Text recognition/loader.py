@@ -165,6 +165,7 @@ class DataHandler:
 
 
     def prepare_tf_dataset(self, idxs, batch_size, drop_remainder=False, img_align_top=True, use_cache=True):
+        self.batch_size = batch_size
         dataset = tf.data.Dataset.from_tensor_slices((self.img_paths[idxs], self.labels[idxs])).map(
             lambda img_path, label: (
                 self.process_image(img_path, img_align_top), 
