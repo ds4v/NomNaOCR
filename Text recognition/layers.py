@@ -27,8 +27,8 @@ def custom_cnn(config, image_input, alpha=0):
     return x
 
 
-def reshape_for_rnn(last_cnn_layer, dim_to_keep=-1):
-    # Reshape accordingly before passing the output to the RNN part
+def reshape_features(last_cnn_layer, dim_to_keep=-1, name='cnn_features'):
+    # Reshape accordingly before passing the output to the RNN or Transformer
     _, height, width, channel = last_cnn_layer.get_shape()
     if dim_to_keep == 1:
         target_shape = (height, width * channel)
@@ -38,7 +38,7 @@ def reshape_for_rnn(last_cnn_layer, dim_to_keep=-1):
         target_shape = (height * width, channel)
     else:
         raise ValueError('Invalid dim_to_keep value')
-    return Reshape(target_shape=(target_shape), name='rnn_input')(last_cnn_layer)
+    return Reshape(target_shape=(target_shape), name=name)(last_cnn_layer)
 
 
 # https://pbcquoc.github.io/vietnamese-ocr (Vietnamese blog)
