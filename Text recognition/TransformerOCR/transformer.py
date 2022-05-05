@@ -202,8 +202,62 @@ def TransformerDecoderBlock(
 
 
 class TransformerOCR(EncoderDecoderModel):
-    def __init__(self, encoder, decoder, data_handler, name='TransformerOCR'):
-        super(TransformerOCR, self).__init__(encoder, decoder, data_handler, name)
+    def __init__(self, cnn_model, encoder, decoder, data_handler, name='TransformerOCR', **kwargs):
+        super(TransformerOCR, self).__init__(encoder, decoder, data_handler, name, **kwargs)
+        self.cnn_model = cnn_model
 
-    def call(self, inputs, training=None):
-        pass
+    def get_config(self):
+        config = super().get_config()
+        config.update({'cnn_model': self.cnn_model})
+        return config
+
+    @tf.function
+    def _compute_loss(self, batch):
+        batch_images, batch_tokens = batch
+        features = self.cnn_model(batch_images)
+        enc_output = self.encoder(features)
+
+        dec_seq_input = batch_tokens[:, :-1]
+        dec_seq_real = batch_tokens[:, 1:]
+        dec_seq_pred, _ = self.decoder([dec_seq_input, enc_output])
+        loss = self.loss(dec_seq_real, dec_seq_pred)
+
+        # Update training display result
+        display_result = {'loss': loss}
+        display_result = self.update_metrics(batch_images, batch_tokens, display_result)
+        return loss, display_result
+
+    @tf.function
+    def predict(self, batch_images, return_attention=False):
+        batch_size = batch_images.shape[0]
+        seq_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
+        done = tf.zeros([batch_size, 1], dtype=tf.bool)
+        result_tokens, attentions = [seq_tokens], []
+
+        features = self.cnn_model(batch_images)
+        enc_output = self.encoder(features)
+        
+        for _ in range(1, self.data_handler.max_length - 1):
+            y_pred, attention_weights = self.decoder([seq_tokens, enc_output])
+            attentions.append(attention_weights)
+
+            # Select the last token from the seq_length (max_length - 1) dimension
+            y_pred = y_pred[:, -1:, :] # (batch_size, 1, vocab_size)
+
+            # Set the logits for all masked tokens to -inf, so they are never chosen
+            y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
+            new_tokens = tf.argmax(y_pred, axis=-1)
+
+            # Once a sequence is done it only produces padding token
+            new_tokens = tf.where(done, tf.constant(0, dtype=tf.int64), new_tokens)
+            
+            # Append new predicted tokens to the result sequences
+            seq_tokens = tf.concat([seq_tokens, new_tokens], axis=-1)
+            result_tokens.append(seq_tokens)
+
+            # If a sequence produces an `END_TOKEN`, set it `done` after that
+            done = done | (new_tokens == self.data_handler.end_token)
+            if tf.executing_eagerly() and tf.reduce_all(done): break
+
+        if return_attention: return result_tokens, tf.concat(attentions, axis=-1)
+        return result_tokens
