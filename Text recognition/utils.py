@@ -16,6 +16,14 @@ def ctc_decode(predictions, max_length):
     )
 
 
+def update_tensor_column(tensor, values, col_idx):
+    if col_idx < 0: raise ValueError("col_idx must be >= 0")
+    rows = tf.range(tf.shape(tensor)[0])
+    column = tf.zeros_like(rows) + col_idx
+    idxs = tf.stack([rows, column], axis=1)
+    return tf.tensor_scatter_nd_update(tensor, idxs, tf.squeeze(values, axis=-1))
+
+
 def tokens2sparse(batch_tokens):
     idxs = tf.where(tf.logical_and(
         batch_tokens != 0, # For [PAD] token

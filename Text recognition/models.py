@@ -2,6 +2,7 @@
 # https://www.tensorflow.org/tutorials/text/image_captioning
 import tensorflow as tf
 from tensorflow.keras.models import clone_model
+from utils import update_tensor_column
 
 
 def get_imagenet_model(model_name, input_shape):
@@ -44,13 +45,14 @@ class EncoderDecoderModel(tf.keras.Model):
     @tf.function
     def _compute_loss(self, batch):
         batch_images, batch_tokens = batch
-        dec_input = tf.expand_dims([self.data_handler.start_token] * self.data_handler.batch_size, 1) 
+        batch_size = batch_images.shape[0]
         loss = tf.constant(0.0)
         
+        dec_input = tf.expand_dims([self.data_handler.start_token] * batch_size, 1) 
         if self.dec_rnn_name: 
             enc_output = self.encoder(batch_images)
             dec_units = self.decoder.get_layer(self.dec_rnn_name).units
-            hidden = tf.zeros((self.data_handler.batch_size, dec_units), dtype=tf.float32)
+            hidden = tf.zeros((batch_size, dec_units), dtype=tf.float32)
         else: enc_output, hidden = self.encoder(batch_images)
             
         for i in range(1, self.data_handler.max_length):
@@ -62,17 +64,16 @@ class EncoderDecoderModel(tf.keras.Model):
             dec_input = tf.expand_dims(batch_tokens[:, i], 1) 
         
         # Update training display result
-        display_result = {'loss': loss / self.data_handler.max_length}
-        display_result = self.update_metrics(batch_images, batch_tokens, display_result)
-        return loss, display_result
+        metrics = self._update_metrics(batch)
+        return loss, {'loss': loss / self.data_handler.max_length, **metrics}
 
 
     @tf.function
-    def update_metrics(self, batch_images, batch_tokens, display_result: dict = {}):
+    def _update_metrics(self, batch):
+        batch_images, batch_tokens = batch
         predictions = self.predict(batch_images) 
         self.compiled_metrics.update_state(batch_tokens, predictions)
-        display_result.update({m.name: m.result() for m in self.metrics})
-        return display_result
+        return {m.name: m.result() for m in self.metrics}
 
 
     @tf.function
@@ -90,14 +91,43 @@ class EncoderDecoderModel(tf.keras.Model):
     def test_step(self, batch):
         _, display_result = self._compute_loss(batch)
         return display_result
+    
+
+    @tf.function
+    def _init_pred_tokens(self, batch_size):
+        seq_tokens = tf.fill([batch_size, self.data_handler.max_length], 0)
+        seq_tokens = tf.cast(seq_tokens, dtype=tf.int64)
+        new_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
+        new_tokens = tf.cast(new_tokens, dtype=tf.int64)
+
+        seq_tokens = update_tensor_column(seq_tokens, new_tokens, 0)
+        done = tf.zeros([batch_size, 1], dtype=tf.bool)
+        return seq_tokens, new_tokens, done
+
+
+    @tf.function
+    def _update_pred_tokens(self, y_pred, seq_tokens, done, pos_idx):
+        # Set the logits for all masked tokens to -inf, so they are never chosen
+        y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
+        new_tokens = tf.argmax(y_pred, axis=-1) 
+
+        # Add batch dimension if it is not present after argmax
+        if tf.rank(new_tokens) == 1: new_tokens = tf.expand_dims(new_tokens, axis=1)
+
+        # Once a sequence is done it only produces padding token
+        new_tokens = tf.where(done, tf.constant(0, dtype=tf.int64), new_tokens)
+        seq_tokens = update_tensor_column(seq_tokens, new_tokens, pos_idx)
+
+        # If a sequence produces an `END_TOKEN`, set it `done` after that
+        done = done | (new_tokens == self.data_handler.end_token)
+        return seq_tokens, new_tokens, done
 
 
     @tf.function
     def predict(self, batch_images, return_attention=False):
         batch_size = batch_images.shape[0]
-        new_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
-        done = tf.zeros([batch_size, 1], dtype=tf.bool)
-        attentions, result_tokens = [], [new_tokens]
+        seq_tokens, new_tokens, done = self._init_pred_tokens(batch_size)
+        attentions = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
         if self.dec_rnn_name: 
             enc_output = self.encoder(batch_images)
@@ -105,22 +135,11 @@ class EncoderDecoderModel(tf.keras.Model):
             hidden = tf.zeros((batch_size, dec_units), dtype=tf.float32)
         else: enc_output, hidden = self.encoder(batch_images)
 
-        for _ in range(1, self.data_handler.max_length):
+        for i in range(1, self.data_handler.max_length):
             y_pred, hidden, attention_weights = self.decoder([new_tokens, enc_output, hidden])
-            attentions.append(attention_weights)
-
-            # Set the logits for all masked tokens to -inf, so they are never chosen
-            y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
-            new_tokens = tf.expand_dims(tf.argmax(y_pred, axis=-1), 1) 
-
-            # Once a sequence is done it only produces padding token
-            new_tokens = tf.where(done, tf.constant(0, dtype=tf.int64), new_tokens)
-            result_tokens.append(new_tokens)
-
-            # If a sequence produces an `END_TOKEN`, set it `done` after that
-            done = done | (new_tokens == self.data_handler.end_token)
+            attentions = attentions.write(i - 1, attention_weights)
+            seq_tokens, new_tokens, done = self._update_pred_tokens(y_pred, seq_tokens, done, i)
             if tf.executing_eagerly() and tf.reduce_all(done): break
 
-        result_tokens = tf.concat(result_tokens, axis=-1)
-        if return_attention: return result_tokens, tf.concat(attentions, axis=-1)
-        return result_tokens
+        if not return_attention: return seq_tokens
+        return seq_tokens, tf.transpose(tf.squeeze(attentions.stack()), [1, 0, 2])
