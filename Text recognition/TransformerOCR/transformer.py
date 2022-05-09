@@ -5,17 +5,20 @@
 import sys
 sys.path.append('..')
 
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Embedding, Dense, Dropout, MultiHeadAttention, LayerNormalization
+from tensorflow.keras.layers import (
+    Input, Embedding, Dense, Dropout, Add, 
+    MultiHeadAttention, LayerNormalization
+)
 from models import EncoderDecoderModel
 
 
-def point_wise_ffn(embedding_dim, feed_forward_units, dropout_rate=None):
-    ffn = tf.keras.Sequential() 
-    ffn.add(Dense(feed_forward_units, activation='relu')) # (batch_size, seq_length, feed_forward_units)
-    if dropout_rate: ffn.add(Dropout(dropout_rate))
-    ffn.add(Dense(embedding_dim)) # (batch_size, seq_length, embedding_dim)
-    return ffn
+def point_wise_ffn(embedding_dim, feed_forward_units):
+    return tf.keras.Sequential([
+        Dense(feed_forward_units, activation='relu'), # (batch_size, seq_length, feed_forward_units)
+        Dense(embedding_dim) # (batch_size, seq_length, embedding_dim)
+    ]) 
 
 
 class TransformerEmbedding(tf.keras.layers.Layer):
@@ -24,6 +27,8 @@ class TransformerEmbedding(tf.keras.layers.Layer):
         embedding_dim, # d_model
         seq_length, # For positional embedding => receptive_size if features or max_length - 1 if texts
         vocab_size = None, # If None => Disable tokens embedding, just use positional embedding
+        use_scale = True,
+        use_pos_embed = False,
         name = 'TransformerEmbedding',
         **kwargs
     ):
@@ -34,16 +39,31 @@ class TransformerEmbedding(tf.keras.layers.Layer):
         '''
         super(TransformerEmbedding, self).__init__(name=name, **kwargs)
         self.tokens_embedding = Embedding(vocab_size, embedding_dim) if vocab_size else None
-        self.positions_embedding = Embedding(seq_length, embedding_dim)
-        self.embed_scale = tf.sqrt(tf.cast(embedding_dim, tf.float32))
+        self.positions_embedding = Embedding(seq_length, embedding_dim) if use_pos_embed else None
+        self.embed_scale = tf.sqrt(tf.cast(embedding_dim, tf.float32)) if use_scale else None
+        self.embedding_dim = embedding_dim
         self.seq_length = seq_length
 
-    def call(self, inputs, use_scale=True):
-        positions = tf.range(start=0, limit=self.seq_length, delta=1)
-        embedded_positions = self.positions_embedding(positions)
+
+    def call(self, inputs):
+        if self.positions_embedding: 
+            positions = tf.range(start=0, limit=self.seq_length, delta=1)
+            positions_info = self.positions_embedding(positions)
+        else: positions_info = self.positional_encoding()
+
         if self.tokens_embedding: inputs = self.tokens_embedding(inputs)
-        if use_scale: inputs *= self.embed_scale
-        return inputs + embedded_positions
+        if self.embed_scale is not None: inputs *= self.embed_scale
+        return inputs + positions_info
+
+
+    def positional_encoding(self):
+        pos = np.arange(self.seq_length)[:, np.newaxis]
+        i = np.arange(self.embedding_dim)[np.newaxis, :]
+        angle_rads = pos / np.power(10000, (2 * (i//2)) / np.float32(self.embedding_dim))
+        angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2]) # Apply sin to even indices in the array; 2i
+        angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2]) # Apply cos to odd indices in the array; 2i+1
+        return tf.cast(angle_rads[np.newaxis, ...], dtype=tf.float32)
+
 
     def compute_mask(self, inputs, mask=None):
         # This will be propagated to the mask argument when call the TransformerDecoderLayer below
@@ -63,13 +83,14 @@ class TransformerEncoderLayer(tf.keras.layers.Layer):
     ):
         super(TransformerEncoderLayer, self).__init__(name=name, **kwargs)
         self.mha = MultiHeadAttention(num_heads=num_heads, key_dim=embedding_dim, dropout=dropout_rate)
-        self.ffn = point_wise_ffn(embedding_dim, feed_forward_units, dropout_rate)
+        self.ffn = point_wise_ffn(embedding_dim, feed_forward_units)
 
         # The output of each sublayer is LayerNorm(x + Sublayer(x)). The normalization is done on the
         # embedding_dim (last) axis. (epsilon: small float added to variance to avoid dividing by 0)
         self.layernorm1 = LayerNormalization(epsilon=1e-6)
         self.layernorm2 = LayerNormalization(epsilon=1e-6)
         self.supports_masking = True
+
 
     def call(self, features):
         attn_output = self.mha(query=features, value=features, key=features, attention_mask=None)
@@ -92,7 +113,7 @@ class TransformerDecoderLayer(tf.keras.layers.Layer):
         super(TransformerDecoderLayer, self).__init__(name=name, **kwargs)
         self.mha1 = MultiHeadAttention(num_heads=num_heads, key_dim=embedding_dim, dropout=dropout_rate)
         self.mha2 = MultiHeadAttention(num_heads=num_heads, key_dim=embedding_dim, dropout=dropout_rate)
-        self.ffn = point_wise_ffn(embedding_dim, feed_forward_units, dropout_rate)
+        self.ffn = point_wise_ffn(embedding_dim, feed_forward_units)
 
         # The output of each sublayer is LayerNorm(x + Sublayer(x)). The normalization is done on the
         # embedding_dim (last) axis. (epsilon: small float added to variance to avoid dividing by 0)
@@ -100,6 +121,7 @@ class TransformerDecoderLayer(tf.keras.layers.Layer):
         self.layernorm2 = LayerNormalization(epsilon=1e-6)
         self.layernorm3 = LayerNormalization(epsilon=1e-6)
         self.supports_masking = True
+
 
     def call(self, inputs, enc_output, mask=None):
         # enc_output.shape == (batch_size, receptive_size, embedding_dim)
@@ -114,18 +136,19 @@ class TransformerDecoderLayer(tf.keras.layers.Layer):
         attn1, attn_weights_block1 = self.mha1(
             query=inputs, value=inputs, key=inputs, 
             attention_mask=look_ahead_mask, return_attention_scores=True
-        )  # (batch_size, max_length - 1, embedding_dim)
+        ) # (batch_size, max_length - 1, embedding_dim)
         out1 = self.layernorm1(attn1 + inputs)
 
         attn2, attn_weights_block2 = self.mha2(
             query=out1, value=enc_output, key=enc_output, 
             attention_mask=padding_mask, return_attention_scores=True
-        )  # (batch_size, max_length - 1, embedding_dim)
+        ) # (batch_size, max_length - 1, embedding_dim)
         out2 = self.layernorm2(attn2 + out1)
         
         ffn_output = self.ffn(out2) # (batch_size, max_length - 1, embedding_dim)
         out3 = self.layernorm3(ffn_output + out2) # (batch_size, max_length - 1, embedding_dim)
         return out3, attn_weights_block1, attn_weights_block2
+
 
     def get_causal_attention_mask(self, inputs):
         input_shape = tf.shape(inputs)
@@ -149,11 +172,10 @@ def TransformerEncoderBlock(
     dropout_rate,
     name = 'TransformerEncoderBlock'
 ):
-    features_input = Input(shape=(receptive_size, embedding_dim), dtype='float32', name='cnn_features')
-    embedding = TransformerEmbedding(embedding_dim, receptive_size, name='PositionalEmbedding')
-    x = embedding(features_input)
-    x = Dropout(dropout_rate, name='embedding_dropout')(x)
-
+    features_maps = Input(shape=(receptive_size, embedding_dim), dtype='float32', name='cnn_features')
+    x = TransformerEmbedding(embedding_dim, receptive_size, name='PositionalEncoding')(features_maps)
+    if dropout_rate > 0: x = Dropout(dropout_rate, name='embedding_dropout')(x)
+    
     for i in range(num_layers):
         x = TransformerEncoderLayer(
             num_heads = num_heads, 
@@ -162,7 +184,9 @@ def TransformerEncoderBlock(
             dropout_rate = dropout_rate,
             name = f'Encoder{i + 1}'
         )(x)
-    return tf.keras.Model(inputs=features_input, outputs=x, name=name)
+
+    x = Add(name='skip_connection')([features_maps, x])
+    return tf.keras.Model(inputs=features_maps, outputs=x, name=name)
 
 
 def TransformerDecoderBlock(
@@ -180,10 +204,9 @@ def TransformerDecoderBlock(
     enc_output = Input(shape=(receptive_size, embedding_dim), dtype='float32', name='encoder_output')
     attention_weights = {}
 
-    # Adding tokens and positional embedding
-    embedding = TransformerEmbedding(embedding_dim, seq_length, vocab_size, name='TokenAndPosEmbedding')
-    x = embedding(dec_seq_input)
-    x = Dropout(dropout_rate, name='embedding_dropout')(x)
+    # Adding tokens embedding and positional encoding
+    x = TransformerEmbedding(embedding_dim, seq_length, vocab_size, name='TokEmbAndPosEncode')(dec_seq_input)
+    if dropout_rate > 0: x = Dropout(dropout_rate, name='embedding_dropout')(x)
 
     for i in range(num_layers):
         layer_name = f'Decoder{i + 1}'
@@ -206,58 +229,45 @@ class TransformerOCR(EncoderDecoderModel):
         super(TransformerOCR, self).__init__(encoder, decoder, data_handler, name, **kwargs)
         self.cnn_model = cnn_model
 
+
     def get_config(self):
         config = super().get_config()
         config.update({'cnn_model': self.cnn_model})
         return config
 
+
     @tf.function
     def _compute_loss(self, batch):
         batch_images, batch_tokens = batch
-        features = self.cnn_model(batch_images)
-        enc_output = self.encoder(features)
+        features = self.cnn_model(batch_images) # (batch_size, receptive_size, embedding_dim)
+        enc_output = self.encoder(features) if self.encoder else features 
 
         dec_seq_input = batch_tokens[:, :-1]
         dec_seq_real = batch_tokens[:, 1:]
-        dec_seq_pred, _ = self.decoder([dec_seq_input, enc_output])
+        dec_seq_pred, _ = self.decoder([dec_seq_input, enc_output]) # (batch_size, seq_length, embedding_dim)
         loss = self.loss(dec_seq_real, dec_seq_pred)
 
         # Update training display result
-        display_result = {'loss': loss}
-        display_result = self.update_metrics(batch_images, batch_tokens, display_result)
-        return loss, display_result
+        metrics = self._update_metrics(batch)
+        return loss, {'loss': loss, **metrics}
+
 
     @tf.function
     def predict(self, batch_images, return_attention=False):
         batch_size = batch_images.shape[0]
-        seq_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
-        done = tf.zeros([batch_size, 1], dtype=tf.bool)
-        result_tokens, attentions = [seq_tokens], []
-
-        features = self.cnn_model(batch_images)
-        enc_output = self.encoder(features)
+        seq_tokens, new_tokens, done = self._init_pred_tokens(batch_size)
+        features = self.cnn_model(batch_images) # (batch_size, receptive_size, embedding_dim)
+        enc_output = self.encoder(features) if self.encoder else features
+        attentions = []
         
-        for _ in range(1, self.data_handler.max_length - 1):
-            y_pred, attention_weights = self.decoder([seq_tokens, enc_output])
+        for i in range(1, self.data_handler.max_length):
+            y_pred, attention_weights = self.decoder([seq_tokens[:, :-1], enc_output])
             attentions.append(attention_weights)
 
             # Select the last token from the seq_length (max_length - 1) dimension
-            y_pred = y_pred[:, -1:, :] # (batch_size, 1, vocab_size)
-
-            # Set the logits for all masked tokens to -inf, so they are never chosen
-            y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
-            new_tokens = tf.argmax(y_pred, axis=-1)
-
-            # Once a sequence is done it only produces padding token
-            new_tokens = tf.where(done, tf.constant(0, dtype=tf.int64), new_tokens)
-            
-            # Append new predicted tokens to the result sequences
-            seq_tokens = tf.concat([seq_tokens, new_tokens], axis=-1)
-            result_tokens.append(seq_tokens)
-
-            # If a sequence produces an `END_TOKEN`, set it `done` after that
-            done = done | (new_tokens == self.data_handler.end_token)
+            y_pred = y_pred[:, i - 1, :] # (batch_size, 1, vocab_size)
+            seq_tokens, new_tokens, done = self._update_pred_tokens(y_pred, seq_tokens, done, i)
             if tf.executing_eagerly() and tf.reduce_all(done): break
 
-        if return_attention: return result_tokens, tf.concat(attentions, axis=-1)
-        return result_tokens
+        if not return_attention: return seq_tokens
+        return seq_tokens, attentions
