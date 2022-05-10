@@ -2,9 +2,6 @@
 # https://keras.io/examples/nlp/neural_machine_translation_with_transformer
 # https://keras.io/examples/vision/image_captioning
 # https://medium.com/geekculture/scene-text-recognition-using-resnet-and-transformer-c1f2dd0e69ae
-import sys
-sys.path.append('..')
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import (
@@ -170,6 +167,7 @@ def TransformerEncoderBlock(
     embedding_dim, # d_model
     feed_forward_units, # dff
     dropout_rate,
+    use_skip_connection = False,
     name = 'TransformerEncoderBlock'
 ):
     features_maps = Input(shape=(receptive_size, embedding_dim), dtype='float32', name='cnn_features')
@@ -185,7 +183,7 @@ def TransformerEncoderBlock(
             name = f'Encoder{i + 1}'
         )(x)
 
-    x = Add(name='skip_connection')([features_maps, x])
+    if use_skip_connection: x = Add(name='skip_connection')([features_maps, x])
     return tf.keras.Model(inputs=features_maps, outputs=x, name=name)
 
 
