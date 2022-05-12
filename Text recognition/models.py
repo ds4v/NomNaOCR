@@ -52,7 +52,7 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         return display_results
     
     @tf.function
-    def _init_pred_tokens(self, batch_size):
+    def _init_pred_tokens(self, batch_size, return_new_tokens=True):
         seq_tokens = tf.fill([batch_size, self.data_handler.max_length], 0)
         seq_tokens = tf.cast(seq_tokens, dtype=tf.int64)
         new_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
@@ -60,10 +60,11 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
 
         seq_tokens = update_tensor_column(seq_tokens, new_tokens, 0)
         done = tf.zeros([batch_size, 1], dtype=tf.bool)
+        if not return_new_tokens: return seq_tokens, done
         return seq_tokens, new_tokens, done
 
     @tf.function
-    def _update_pred_tokens(self, y_pred, seq_tokens, done, pos_idx):
+    def _update_pred_tokens(self, y_pred, seq_tokens, done, pos_idx, return_new_tokens=True):
         # Set the logits for all masked tokens to -inf, so they are never chosen
         y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
         new_tokens = tf.argmax(y_pred, axis=-1) 
@@ -77,6 +78,7 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
 
         # If a sequence produces an `END_TOKEN`, set it `done` after that
         done = done | (new_tokens == self.data_handler.end_token)
+        if not return_new_tokens: return seq_tokens, done
         return seq_tokens, new_tokens, done
 
     @abstractmethod
