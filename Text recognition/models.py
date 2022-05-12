@@ -2,6 +2,7 @@
 # https://www.tensorflow.org/tutorials/text/image_captioning
 import tensorflow as tf
 from tensorflow.keras.models import clone_model
+from abc import abstractmethod, ABCMeta # For define pure virtual functions
 from utils import update_tensor_column
 
 
@@ -11,7 +12,79 @@ def get_imagenet_model(model_name, input_shape):
     return base_model(input_shape=input_shape, weights=None, include_top=False)
 
 
-class EncoderDecoderModel(tf.keras.Model):
+class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
+    def __init__(self, data_handler=None, name='CustomTrainingModel', **kwargs):
+        super(CustomTrainingModel, self).__init__(name=name, **kwargs)
+        self.data_handler = data_handler
+
+    @abstractmethod
+    def get_config(self):
+        pass # Pure virtual functions => Must be overridden in the derived classes
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config) # To clone model when using kfold training
+
+    @tf.function
+    def _update_metrics(self, batch):
+        batch_images, batch_tokens = batch
+        predictions = self.predict(batch_images) 
+        self.compiled_metrics.update_state(batch_tokens, predictions)
+        return {m.name: m.result() for m in self.metrics}
+
+    @abstractmethod
+    def _compute_loss_and_metrics(self):
+        pass # Pure virtual functions => Must be overridden in the derived classes
+
+    @tf.function
+    def train_step(self, batch):
+        with tf.GradientTape() as tape:
+            loss, display_results = self._compute_loss_and_metrics(batch)
+
+        # Apply an optimization step
+        gradients = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+        return display_results
+
+    @tf.function
+    def test_step(self, batch):
+        _, display_results = self._compute_loss_and_metrics(batch)
+        return display_results
+    
+    @tf.function
+    def _init_pred_tokens(self, batch_size):
+        seq_tokens = tf.fill([batch_size, self.data_handler.max_length], 0)
+        seq_tokens = tf.cast(seq_tokens, dtype=tf.int64)
+        new_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
+        new_tokens = tf.cast(new_tokens, dtype=tf.int64)
+
+        seq_tokens = update_tensor_column(seq_tokens, new_tokens, 0)
+        done = tf.zeros([batch_size, 1], dtype=tf.bool)
+        return seq_tokens, new_tokens, done
+
+    @tf.function
+    def _update_pred_tokens(self, y_pred, seq_tokens, done, pos_idx):
+        # Set the logits for all masked tokens to -inf, so they are never chosen
+        y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
+        new_tokens = tf.argmax(y_pred, axis=-1) 
+
+        # Add batch dimension if it is not present after argmax
+        if tf.rank(new_tokens) == 1: new_tokens = tf.expand_dims(new_tokens, axis=1)
+
+        # Once a sequence is done it only produces padding token
+        new_tokens = tf.where(done, tf.constant(0, dtype=tf.int64), new_tokens)
+        seq_tokens = update_tensor_column(seq_tokens, new_tokens, pos_idx)
+
+        # If a sequence produces an `END_TOKEN`, set it `done` after that
+        done = done | (new_tokens == self.data_handler.end_token)
+        return seq_tokens, new_tokens, done
+
+    @abstractmethod
+    def predict(self, batch_images):
+        pass # Pure virtual functions => Must be overridden in the derived classes
+
+
+class EncoderDecoderModel(CustomTrainingModel):
     def __init__(
         self, 
         encoder: tf.keras.Model,
@@ -21,29 +94,23 @@ class EncoderDecoderModel(tf.keras.Model):
         name = 'EncoderDecoderModel', 
         **kwargs
     ):
-        super(EncoderDecoderModel, self).__init__(name=name, **kwargs)
+        super(EncoderDecoderModel, self).__init__(data_handler, name, **kwargs)
         self.encoder = encoder
         self.decoder = decoder
-        self.data_handler = data_handler
         self.dec_rnn_name = dec_rnn_name
 
 
     def get_config(self):
-        return {
+        return{
             'encoder': clone_model(self.encoder), 
             'decoder': clone_model(self.decoder),
-            'data_handler': self.data_handler,
-            'dec_rnn_name': self.dec_rnn_name
+            'dec_rnn_name': self.dec_rnn_name,
+            'data_handler': self.data_handler
         }
     
 
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config) # to clone model when using kfold training
-
-    
     @tf.function
-    def _compute_loss(self, batch):
+    def _compute_loss_and_metrics(self, batch):
         batch_images, batch_tokens = batch
         batch_size = batch_images.shape[0]
         loss = tf.constant(0.0)
@@ -66,62 +133,7 @@ class EncoderDecoderModel(tf.keras.Model):
         # Update training display result
         metrics = self._update_metrics(batch)
         return loss, {'loss': loss / self.data_handler.max_length, **metrics}
-
-
-    @tf.function
-    def _update_metrics(self, batch):
-        batch_images, batch_tokens = batch
-        predictions = self.predict(batch_images) 
-        self.compiled_metrics.update_state(batch_tokens, predictions)
-        return {m.name: m.result() for m in self.metrics}
-
-
-    @tf.function
-    def train_step(self, batch):
-        with tf.GradientTape() as tape:
-            loss, display_result = self._compute_loss(batch)
-
-        # Apply an optimization step
-        gradients = tape.gradient(loss, self.trainable_variables)
-        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
-        return display_result
-
-
-    @tf.function
-    def test_step(self, batch):
-        _, display_result = self._compute_loss(batch)
-        return display_result
     
-
-    @tf.function
-    def _init_pred_tokens(self, batch_size):
-        seq_tokens = tf.fill([batch_size, self.data_handler.max_length], 0)
-        seq_tokens = tf.cast(seq_tokens, dtype=tf.int64)
-        new_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
-        new_tokens = tf.cast(new_tokens, dtype=tf.int64)
-
-        seq_tokens = update_tensor_column(seq_tokens, new_tokens, 0)
-        done = tf.zeros([batch_size, 1], dtype=tf.bool)
-        return seq_tokens, new_tokens, done
-
-
-    @tf.function
-    def _update_pred_tokens(self, y_pred, seq_tokens, done, pos_idx):
-        # Set the logits for all masked tokens to -inf, so they are never chosen
-        y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
-        new_tokens = tf.argmax(y_pred, axis=-1) 
-
-        # Add batch dimension if it is not present after argmax
-        if tf.rank(new_tokens) == 1: new_tokens = tf.expand_dims(new_tokens, axis=1)
-
-        # Once a sequence is done it only produces padding token
-        new_tokens = tf.where(done, tf.constant(0, dtype=tf.int64), new_tokens)
-        seq_tokens = update_tensor_column(seq_tokens, new_tokens, pos_idx)
-
-        # If a sequence produces an `END_TOKEN`, set it `done` after that
-        done = done | (new_tokens == self.data_handler.end_token)
-        return seq_tokens, new_tokens, done
-
 
     @tf.function
     def predict(self, batch_images, return_attention=False):

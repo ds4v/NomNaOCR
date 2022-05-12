@@ -8,7 +8,7 @@ from tensorflow.keras.layers import (
     Input, Embedding, Dense, Dropout, Add, 
     MultiHeadAttention, LayerNormalization
 )
-from models import EncoderDecoderModel
+from models import CustomTrainingModel
 
 
 def point_wise_ffn(embedding_dim, feed_forward_units):
@@ -222,20 +222,25 @@ def TransformerDecoderBlock(
     return tf.keras.Model(inputs=[dec_seq_input, enc_output], outputs=[y_pred, attention_weights], name=name)
 
 
-class TransformerOCR(EncoderDecoderModel):
+class TransformerOCR(CustomTrainingModel):
     def __init__(self, cnn_model, encoder, decoder, data_handler, name='TransformerOCR', **kwargs):
-        super(TransformerOCR, self).__init__(encoder, decoder, data_handler, name, **kwargs)
+        super(TransformerOCR, self).__init__(data_handler, name, **kwargs)
         self.cnn_model = cnn_model
+        self.encoder = encoder
+        self.decoder = decoder
 
 
     def get_config(self):
-        config = super().get_config()
-        config.update({'cnn_model': self.cnn_model})
-        return config
+        return {
+            'cnn_model': clone_model(self.cnn_model), 
+            'encoder': clone_model(self.encoder), 
+            'decoder': clone_model(self.decoder),
+            'data_handler': self.data_handler
+        }
 
 
     @tf.function
-    def _compute_loss(self, batch):
+    def _compute_loss_and_metrics(self, batch):
         batch_images, batch_tokens = batch
         features = self.cnn_model(batch_images) # (batch_size, receptive_size, embedding_dim)
         enc_output = self.encoder(features) if self.encoder else features 
