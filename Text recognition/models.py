@@ -155,3 +155,67 @@ class EncoderDecoderModel(CustomTrainingModel):
 
         if not return_attention: return seq_tokens
         return seq_tokens, tf.transpose(tf.squeeze(attentions.stack()), [1, 0, 2])
+
+
+class PartialImageCaptioner(CustomTrainingModel):
+    def __init__(
+        self, 
+        captioner: tf.keras.Model, 
+        data_handler = None, # DataHandler instance
+        name = 'PartialImageCaptioner', 
+        **kwargs
+    ):
+        super(PartialImageCaptioner, self).__init__(data_handler, name, **kwargs)
+        self.captioner = captioner
+
+
+    def get_config(self):
+        return {
+            'captioner': clone_model(self.captioner), 
+            'data_handler': self.data_handler,
+        }
+
+
+    @tf.function
+    def _compute_loss_and_metrics(self, batch):
+        batch_images = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+        batch_partial_tokens = tf.TensorArray(dtype=tf.int64, size=0, dynamic_size=True) 
+        batch_target_tokens = tf.TensorArray(dtype=tf.int64, size=0, dynamic_size=True)
+        count = 0
+
+        ''' Process the input into this format:
+            Image vector + A -> girl
+            Image vector + A girl -> going
+            Image vector + A girl going -> into
+            Image vector + A girl going into -> a
+            Image vector + A girl going into a -> wooden
+            Image vector + A girl going into a wooden -> building
+        Example: https://images.viblo.asia/7f1b412d-9f4e-4b36-aa51-63ce958f84e2.jpeg
+        '''
+        for item_idx in range(batch[0].shape[0]): # Loop through each item in batch
+            image, seq_tokens = batch[0][item_idx], batch[1][item_idx]
+            label_length = tf.math.count_nonzero(seq_tokens, dtype=tf.int32)
+            
+            for token_idx in range(1, tf.math.count_nonzero(seq_tokens, dtype=tf.int32)):
+                partial_tokens = tf.pad(
+                    seq_tokens[:token_idx], 
+                    paddings = [[0, self.data_handler.max_length - token_idx - 1]], 
+                    constant_values = 0 # Pad with padding token
+                )
+                batch_images = batch_images.write(count, image)
+                batch_partial_tokens = batch_partial_tokens.write(count, partial_tokens)
+                batch_target_tokens = batch_target_tokens.write(count, seq_tokens[token_idx])
+                count += 1
+
+        # Get predictions and compute the loss
+        y_pred = self.captioner([batch_images.stack(), batch_partial_tokens.stack()])
+        loss = self.loss(batch_target_tokens.stack(), y_pred) 
+
+        # Update training display result
+        # metrics = self._update_metrics(batch)
+        return loss, {'loss': loss}
+
+    
+    @tf.function
+    def predict(self, batch_images):
+        pass
