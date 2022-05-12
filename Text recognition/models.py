@@ -214,10 +214,17 @@ class PartialImageCaptioner(CustomTrainingModel):
         loss = self.loss(batch_target_tokens.stack(), y_pred) 
 
         # Update training display result
-        # metrics = self._update_metrics(batch)
-        return loss, {'loss': loss}
+        metrics = self._update_metrics(batch)
+        return loss, {'loss': loss, **metrics}
 
     
     @tf.function
     def predict(self, batch_images):
-        pass
+        batch_size = batch_images.shape[0]
+        seq_tokens, done = self._init_pred_tokens(batch_size, return_new_tokens=False)
+        
+        for i in range(1, self.data_handler.max_length):
+            y_pred = self.captioner([batch_images, seq_tokens[:, :-1]])
+            seq_tokens, done = self._update_pred_tokens(y_pred, seq_tokens, done, i, return_new_tokens=False)
+            if tf.executing_eagerly() and tf.reduce_all(done): break
+        return seq_tokens
