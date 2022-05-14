@@ -17,13 +17,16 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         super(CustomTrainingModel, self).__init__(name=name, **kwargs)
         self.data_handler = data_handler
 
+
     @abstractmethod
     def get_config(self):
         pass # Pure virtual functions => Must be overridden in the derived classes
 
+
     @classmethod
     def from_config(cls, config):
         return cls(**config) # To clone model when using kfold training
+
 
     @tf.function
     def _update_metrics(self, batch):
@@ -32,9 +35,11 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         self.compiled_metrics.update_state(batch_tokens, predictions)
         return {m.name: m.result() for m in self.metrics}
 
+
     @abstractmethod
     def _compute_loss_and_metrics(self):
         pass # Pure virtual functions => Must be overridden in the derived classes
+
 
     @tf.function
     def train_step(self, batch):
@@ -46,14 +51,16 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
         return display_results
 
+
     @tf.function
     def test_step(self, batch):
         _, display_results = self._compute_loss_and_metrics(batch)
         return display_results
     
+
     @tf.function
-    def _init_pred_tokens(self, batch_size, return_new_tokens=True):
-        seq_tokens = tf.fill([batch_size, self.data_handler.max_length], 0)
+    def _init_seq_tokens(self, batch_size, return_new_tokens=True):
+        seq_tokens = tf.fill([batch_size, self.data_handler.max_length], self.data_handler.start_token)
         seq_tokens = tf.cast(seq_tokens, dtype=tf.int64)
         new_tokens = tf.fill([batch_size, 1], self.data_handler.start_token)
         new_tokens = tf.cast(new_tokens, dtype=tf.int64)
@@ -63,8 +70,9 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         if not return_new_tokens: return seq_tokens, done
         return seq_tokens, new_tokens, done
 
+
     @tf.function
-    def _update_pred_tokens(self, y_pred, seq_tokens, done, pos_idx, return_new_tokens=True):
+    def _update_seq_tokens(self, y_pred, seq_tokens, done, pos_idx, return_new_tokens=True):
         # Set the logits for all masked tokens to -inf, so they are never chosen
         y_pred = tf.where(self.data_handler.token_mask, float('-inf'), y_pred)
         new_tokens = tf.argmax(y_pred, axis=-1) 
@@ -80,6 +88,7 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         done = done | (new_tokens == self.data_handler.end_token)
         if not return_new_tokens: return seq_tokens, done
         return seq_tokens, new_tokens, done
+
 
     @abstractmethod
     def predict(self, batch_images):
@@ -118,7 +127,7 @@ class EncoderDecoderModel(CustomTrainingModel):
         loss = tf.constant(0.0)
         
         dec_input = tf.expand_dims([self.data_handler.start_token] * batch_size, 1) 
-        if self.dec_rnn_name: 
+        if self.dec_rnn_name: # If there is no rnn in encoder, the hidden state will be initialized with 0
             enc_output = self.encoder(batch_images)
             dec_units = self.decoder.get_layer(self.dec_rnn_name).units
             hidden = tf.zeros((batch_size, dec_units), dtype=tf.float32)
@@ -140,7 +149,7 @@ class EncoderDecoderModel(CustomTrainingModel):
     @tf.function
     def predict(self, batch_images, return_attention=False):
         batch_size = batch_images.shape[0]
-        seq_tokens, new_tokens, done = self._init_pred_tokens(batch_size)
+        seq_tokens, new_tokens, done = self._init_seq_tokens(batch_size)
         attentions = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
         if self.dec_rnn_name: 
@@ -152,7 +161,7 @@ class EncoderDecoderModel(CustomTrainingModel):
         for i in range(1, self.data_handler.max_length):
             y_pred, hidden, attention_weights = self.decoder([new_tokens, enc_output, hidden])
             attentions = attentions.write(i - 1, attention_weights)
-            seq_tokens, new_tokens, done = self._update_pred_tokens(y_pred, seq_tokens, done, i)
+            seq_tokens, new_tokens, done = self._update_seq_tokens(y_pred, seq_tokens, done, i)
             if tf.executing_eagerly() and tf.reduce_all(done): break
 
         if not return_attention: return seq_tokens

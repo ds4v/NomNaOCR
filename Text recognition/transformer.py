@@ -258,7 +258,7 @@ class TransformerOCR(CustomTrainingModel):
     @tf.function
     def predict(self, batch_images, return_attention=False):
         batch_size = batch_images.shape[0]
-        seq_tokens, done = self._init_pred_tokens(batch_size, return_new_tokens=False)
+        seq_tokens, done = self._init_seq_tokens(batch_size, return_new_tokens=False)
         features = self.cnn_model(batch_images) # (batch_size, receptive_size, embedding_dim)
         enc_output = self.encoder(features) if self.encoder else features
         attentions = []
@@ -269,7 +269,7 @@ class TransformerOCR(CustomTrainingModel):
 
             # Select the last token from the seq_length (max_length - 1) dimension
             y_pred = y_pred[:, i - 1, :] # (batch_size, 1, vocab_size)
-            seq_tokens, done = self._update_pred_tokens(y_pred, seq_tokens, done, i, return_new_tokens=False)
+            seq_tokens, done = self._update_seq_tokens(y_pred, seq_tokens, done, i, return_new_tokens=False)
             if tf.executing_eagerly() and tf.reduce_all(done): break
 
         if not return_attention: return seq_tokens
