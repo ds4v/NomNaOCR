@@ -18,9 +18,8 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         self.data_handler = data_handler
 
 
-    @abstractmethod
     def get_config(self):
-        pass # Pure virtual functions => Must be overridden in the derived classes
+        raise NotImplementedError() # To return model components when using clone_model
 
 
     @classmethod
@@ -28,16 +27,13 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         return cls(**config) # To clone model when using kfold training
 
 
-    @tf.function
-    def _update_metrics(self, batch):
-        batch_images, batch_tokens = batch
-        predictions = self.predict(batch_images) 
-        self.compiled_metrics.update_state(batch_tokens, predictions)
-        return {m.name: m.result() for m in self.metrics}
-
-
     @abstractmethod
     def _compute_loss_and_metrics(self):
+        pass # Pure virtual functions => Must be overridden in the derived classes
+
+    
+    @abstractmethod
+    def predict(self, batch_images):
         pass # Pure virtual functions => Must be overridden in the derived classes
 
 
@@ -57,6 +53,14 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         _, display_results = self._compute_loss_and_metrics(batch)
         return display_results
     
+
+    @tf.function
+    def _update_metrics(self, batch):
+        batch_images, batch_tokens = batch
+        predictions = self.predict(batch_images) 
+        self.compiled_metrics.update_state(batch_tokens, predictions)
+        return {m.name: m.result() for m in self.metrics}
+
 
     @tf.function
     def _init_seq_tokens(self, batch_size, return_new_tokens=True):
@@ -88,11 +92,6 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
         done = done | (new_tokens == self.data_handler.end_token)
         if not return_new_tokens: return seq_tokens, done
         return seq_tokens, new_tokens, done
-
-
-    @abstractmethod
-    def predict(self, batch_images):
-        pass # Pure virtual functions => Must be overridden in the derived classes
 
 
 class EncoderDecoderModel(CustomTrainingModel):
@@ -188,7 +187,7 @@ class PartialImageCaptioner(CustomTrainingModel):
 
 
     @tf.function
-    def loop(self, batch_images, batch_tokens=None):
+    def _loop(self, batch_images, batch_tokens=None):
         batch_size = batch_images.shape[0]
         seq_tokens, done = self._init_seq_tokens(batch_size, return_new_tokens=False)
         loss = tf.constant(0.0)
@@ -206,11 +205,11 @@ class PartialImageCaptioner(CustomTrainingModel):
     @tf.function
     def _compute_loss_and_metrics(self, batch):
         batch_images, batch_tokens = batch
-        loss = self.loop(batch_images, batch_tokens)
+        loss = self._loop(batch_images, batch_tokens)
         metrics = self._update_metrics(batch) # Update training display result
         return loss, {'loss': loss, **metrics}
 
     
     @tf.function
     def predict(self, batch_images):
-        return self.loop(batch_images)
+        return self._loop(batch_images)
