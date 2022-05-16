@@ -167,21 +167,24 @@ class EncoderDecoderModel(CustomTrainingModel):
         return seq_tokens, tf.transpose(tf.squeeze(attentions.stack()), [1, 0, 2])
 
 
-class PartialImageCaptioner(CustomTrainingModel):
+class EarlyBindingCaptioner(CustomTrainingModel):
     def __init__(
         self, 
-        captioner: tf.keras.Model, 
+        cnn_block: tf.keras.Model, 
+        rnn_block: tf.keras.Model, 
         data_handler = None, # DataHandler instance
-        name = 'PartialImageCaptioner', 
+        name = 'EarlyBindingCaptioner', 
         **kwargs
     ):
-        super(PartialImageCaptioner, self).__init__(data_handler, name, **kwargs)
-        self.captioner = captioner
+        super(EarlyBindingCaptioner, self).__init__(data_handler, name, **kwargs)
+        self.cnn_block = cnn_block
+        self.rnn_block = rnn_block
 
 
     def get_config(self):
         return {
-            'captioner': clone_model(self.captioner), 
+            'cnn_block': clone_model(self.cnn_block), 
+            'rnn_block': clone_model(self.rnn_block), 
             'data_handler': self.data_handler,
         }
 
@@ -190,10 +193,11 @@ class PartialImageCaptioner(CustomTrainingModel):
     def _loop(self, batch_images, batch_tokens=None):
         batch_size = batch_images.shape[0]
         seq_tokens, done = self._init_seq_tokens(batch_size, return_new_tokens=False)
+        features = self.cnn_block(batch_images)
         loss = tf.constant(0.0)
             
         for i in range(1, self.data_handler.max_length):
-            y_pred = self.captioner([batch_images, seq_tokens[:, :-1]])
+            y_pred = self.rnn_block([seq_tokens[:, :-1], features])
             seq_tokens, done = self._update_seq_tokens(y_pred, seq_tokens, done, i, return_new_tokens=False)
             if batch_tokens is not None: loss += self.loss(batch_tokens[:, i], y_pred) # Is training
             elif tf.executing_eagerly() and tf.reduce_all(done): break # Is predicting
