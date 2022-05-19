@@ -1,8 +1,7 @@
 __pycache__/
 .ipynb_checkpoints
-Dataset/*
+Datasets
 Data collection/*
-Fine-tuning OCR tools/*
 !automa2txt.py
 !workflow.json
 *.cach
