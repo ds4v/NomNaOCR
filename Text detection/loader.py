@@ -49,20 +49,13 @@ class DataImporter:
 
 class DBNetDataGenerator(tf.keras.utils.Sequence):
     def __init__(
-        self,
-        img_paths = [], 
-        all_bboxes = [],
-        batch_size = 16,
-        image_size = 640,
-        thresh_min = 0.3, 
-        thresh_max = 0.7,
-        shrink_ratio = 0.4, 
-        is_training = True
+        self, img_paths=[], all_bboxes=[], batch_size=16, img_size=640,
+        thresh_min=0.3, thresh_max=0.7, shrink_ratio=0.4, is_training=True
     ):
         self.img_paths = img_paths
         self.all_bboxes = all_bboxes
         self.batch_size = batch_size
-        self.image_size = image_size
+        self.img_size = img_size
 
         self.thresh_min = thresh_min
         self.thresh_max = thresh_max
@@ -76,11 +69,11 @@ class DBNetDataGenerator(tf.keras.utils.Sequence):
 
 
     def _init_inputs(self):
-        batch_images = np.zeros([self.batch_size, self.image_size, self.image_size, 3], dtype=np.float32)
-        batch_gts = np.zeros([self.batch_size, self.image_size, self.image_size], dtype=np.float32)
-        batch_masks = np.zeros([self.batch_size, self.image_size, self.image_size], dtype=np.float32)
-        batch_thresh_maps = np.zeros([self.batch_size, self.image_size, self.image_size], dtype=np.float32)
-        batch_thresh_masks = np.zeros([self.batch_size, self.image_size, self.image_size], dtype=np.float32)
+        batch_images = np.zeros([self.batch_size, self.img_size, self.img_size, 3], dtype=np.float32)
+        batch_gts = np.zeros([self.batch_size, self.img_size, self.img_size], dtype=np.float32)
+        batch_masks = np.zeros([self.batch_size, self.img_size, self.img_size], dtype=np.float32)
+        batch_thresh_maps = np.zeros([self.batch_size, self.img_size, self.img_size], dtype=np.float32)
+        batch_thresh_masks = np.zeros([self.batch_size, self.img_size, self.img_size], dtype=np.float32)
         return batch_images, batch_gts, batch_masks, batch_thresh_maps, batch_thresh_masks
 
 
@@ -149,12 +142,12 @@ class DBNetDataGenerator(tf.keras.utils.Sequence):
                 transform_aug = self.transform_aug.to_deterministic()
                 image, image_bboxes = transform(transform_aug, image, image_bboxes)
                 image, image_bboxes = crop(image, image_bboxes)
-            image, image_bboxes = resize(self.image_size, image, image_bboxes)
+            image, image_bboxes = resize(self.img_size, image, image_bboxes)
 
-            gt = np.zeros((self.image_size, self.image_size), dtype=np.float32)
-            mask = np.ones((self.image_size, self.image_size), dtype=np.float32)
-            thresh_map = np.zeros((self.image_size, self.image_size), dtype=np.float32)
-            thresh_mask = np.zeros((self.image_size, self.image_size), dtype=np.float32)
+            gt = np.zeros((self.img_size, self.img_size), dtype=np.float32)
+            mask = np.ones((self.img_size, self.img_size), dtype=np.float32)
+            thresh_map = np.zeros((self.img_size, self.img_size), dtype=np.float32)
+            thresh_mask = np.zeros((self.img_size, self.img_size), dtype=np.float32)
 
             for bbox in image_bboxes: # Generate gt and mask
                 polygon = Polygon(bbox['points'])
