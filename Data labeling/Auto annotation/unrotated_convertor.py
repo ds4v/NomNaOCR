@@ -30,8 +30,8 @@ args = vars(ap.parse_args())
 
 '''Example:
 python unrotated_convertor.py \
-    -i "../../Dataset/Tale of Kieu version 1871 - Rotate/Cache.cach" \
-    -o "../../Dataset/Tale of Kieu version 1871/Cache.cach" \
+    -i "Datasets/Tale of Kieu version 1871 - Rotate/Cache.cach" \
+    -o "Datasets/Tale of Kieu version 1871/Cache.cach" \
     -d "both" \
     --max_woh 0.25 \
     --overlap 0.5

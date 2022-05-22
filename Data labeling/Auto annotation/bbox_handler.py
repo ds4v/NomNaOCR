@@ -59,8 +59,7 @@ class BoundingBoxHandler:
         # now that we have the dimensions of the new image, construct
         # the set of destination points to obtain a "birds eye view",
         # (i.e. top-down view) of the image, again specifying points
-        # in the top-left, top-right, bottom-right, and bottom-left
-        # order
+        # in the top-left, top-right, bottom-right, and bottom-left order
         dst = np.array([
             [tl[0], tl[1]], 
             [maxWidth, tl[1]], 
