@@ -1,5 +1,6 @@
-import ast
 import cv2
+import ast
+import json
 import pyclipper
 import numpy as np
 import tensorflow as tf
@@ -22,10 +23,10 @@ class DataImporter:
 
             for line in lines.rstrip('\n').split('\n'):
                 image_path, image_bboxes = line.split('\t')
-                image_bboxes = [
-                    bbox for bbox in ast.literal_eval(image_bboxes) 
-                    if len(bbox['points']) >= 3
-                ]
+                try: image_bboxes = ast.literal_eval(image_bboxes)
+                except: image_bboxes = json.loads(image_bboxes)
+                image_bboxes = [bbox for bbox in image_bboxes if len(bbox['points']) >= 3]
+                
                 self.img_paths.append(image_path)
                 self.all_bboxes.append(image_bboxes)
                 self.bboxes_count += len(image_bboxes)
