@@ -28,7 +28,7 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
 
 
     @abstractmethod
-    def _compute_loss_and_metrics(self):
+    def _compute_loss_and_metrics(self, batch, is_training=False):
         pass # Pure virtual functions => Must be overridden in the derived classes
 
     
@@ -40,7 +40,7 @@ class CustomTrainingModel(tf.keras.Model, metaclass=ABCMeta):
     @tf.function
     def train_step(self, batch):
         with tf.GradientTape() as tape:
-            loss, display_results = self._compute_loss_and_metrics(batch)
+            loss, display_results = self._compute_loss_and_metrics(batch, is_training=True)
 
         # Apply an optimization step
         gradients = tape.gradient(loss, self.trainable_variables)
@@ -120,25 +120,23 @@ class EncoderDecoderModel(CustomTrainingModel):
     
 
     @tf.function
-    def _compute_loss_and_metrics(self, batch):
+    def _compute_loss_and_metrics(self, batch, is_training=False):
         batch_images, batch_tokens = batch
         batch_size = batch_images.shape[0]
         loss = tf.constant(0.0)
         
         dec_input = tf.expand_dims([self.data_handler.start_token] * batch_size, 1) 
         if self.dec_rnn_name: # If there is no rnn in encoder, the hidden state will be initialized with 0
-            enc_output = self.encoder(batch_images)
+            enc_output = self.encoder(batch_images, training=is_training)
             dec_units = self.decoder.get_layer(self.dec_rnn_name).units
             hidden = tf.zeros((batch_size, dec_units), dtype=tf.float32)
-        else: enc_output, hidden = self.encoder(batch_images)
+        else: enc_output, hidden = self.encoder(batch_images, training=is_training)
             
         for i in range(1, self.data_handler.max_length):
             # Passing the features through the decoder
-            y_pred, hidden, _ = self.decoder([dec_input, enc_output, hidden])
+            y_pred, hidden, _ = self.decoder([dec_input, enc_output, hidden], training=is_training)
             loss += self.loss(batch_tokens[:, i], y_pred) 
-            
-            # Use teacher forcing
-            dec_input = tf.expand_dims(batch_tokens[:, i], 1) 
+            dec_input = tf.expand_dims(batch_tokens[:, i], 1) # Use teacher forcing
         
         # Update training display result
         metrics = self._update_metrics(batch)
@@ -152,13 +150,13 @@ class EncoderDecoderModel(CustomTrainingModel):
         attentions = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
 
         if self.dec_rnn_name: 
-            enc_output = self.encoder(batch_images)
+            enc_output = self.encoder(batch_images, training=False)
             dec_units = self.decoder.get_layer(self.dec_rnn_name).units
             hidden = tf.zeros((batch_size, dec_units), dtype=tf.float32)
-        else: enc_output, hidden = self.encoder(batch_images)
+        else: enc_output, hidden = self.encoder(batch_images, training=False)
 
         for i in range(1, self.data_handler.max_length):
-            y_pred, hidden, attention_weights = self.decoder([new_tokens, enc_output, hidden])
+            y_pred, hidden, attention_weights = self.decoder([new_tokens, enc_output, hidden], training=False)
             attentions = attentions.write(i - 1, attention_weights)
             seq_tokens, new_tokens, done = self._update_seq_tokens(y_pred, seq_tokens, done, i)
             if tf.executing_eagerly() and tf.reduce_all(done): break
@@ -190,14 +188,14 @@ class EarlyBindingCaptioner(CustomTrainingModel):
 
 
     @tf.function
-    def _loop(self, batch_images, batch_tokens=None):
+    def _loop(self, batch_images, batch_tokens=None, is_training=False):
         batch_size = batch_images.shape[0]
         seq_tokens, done = self._init_seq_tokens(batch_size, return_new_tokens=False)
-        features = self.cnn_block(batch_images)
+        features = self.cnn_block(batch_images, training=is_training)
         loss = tf.constant(0.0)
             
         for i in range(1, self.data_handler.max_length):
-            y_pred = self.rnn_block([seq_tokens[:, :-1], features])
+            y_pred = self.rnn_block([seq_tokens[:, :-1], features], training=is_training)
             seq_tokens, done = self._update_seq_tokens(y_pred, seq_tokens, done, i, return_new_tokens=False)
             if batch_tokens is not None: loss += self.loss(batch_tokens[:, i], y_pred) # Is training
             elif tf.executing_eagerly() and tf.reduce_all(done): break # Is predicting
@@ -207,9 +205,9 @@ class EarlyBindingCaptioner(CustomTrainingModel):
 
 
     @tf.function
-    def _compute_loss_and_metrics(self, batch):
+    def _compute_loss_and_metrics(self, batch, is_training=False):
         batch_images, batch_tokens = batch
-        loss = self._loop(batch_images, batch_tokens)
+        loss = self._loop(batch_images, batch_tokens, is_training)
         metrics = self._update_metrics(batch) # Update training display result
         return loss, {'loss': loss, **metrics}
 

@@ -4,10 +4,7 @@
 # https://medium.com/geekculture/scene-text-recognition-using-resnet-and-transformer-c1f2dd0e69ae
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import (
-    Input, Embedding, Dense, Dropout, Add, 
-    MultiHeadAttention, LayerNormalization
-)
+from tensorflow.keras.layers import Input, Embedding, Dense, Dropout, Add, MultiHeadAttention, LayerNormalization
 from models import CustomTrainingModel
 
 
@@ -89,8 +86,8 @@ class TransformerEncoderLayer(tf.keras.layers.Layer):
         self.supports_masking = True
 
 
-    def call(self, features):
-        attn_output = self.mha(query=features, value=features, key=features, attention_mask=None)
+    def call(self, features, training, mask=None):
+        attn_output = self.mha(query=features, value=features, key=features, attention_mask=None, training=training)
         out1 = self.layernorm1(features + attn_output) 
         ffn_output = self.ffn(out1)
         out2 = self.layernorm2(out1 + ffn_output)
@@ -120,7 +117,7 @@ class TransformerDecoderLayer(tf.keras.layers.Layer):
         self.supports_masking = True
 
 
-    def call(self, inputs, enc_output, mask=None):
+    def call(self, inputs, enc_output, training, mask=None):
         # enc_output.shape == (batch_size, receptive_size, embedding_dim)
         padding_mask = None
         if mask is not None: # Check for the attention mask when use encoder output in MultiHeadAttention
@@ -131,13 +128,13 @@ class TransformerDecoderLayer(tf.keras.layers.Layer):
         look_ahead_mask = tf.minimum(look_ahead_mask, causal_mask)
 
         attn1, attn_weights_block1 = self.mha1(
-            query=inputs, value=inputs, key=inputs, 
+            query=inputs, value=inputs, key=inputs, training=training,
             attention_mask=look_ahead_mask, return_attention_scores=True
         ) # (batch_size, max_length - 1, embedding_dim)
         out1 = self.layernorm1(attn1 + inputs)
 
         attn2, attn_weights_block2 = self.mha2(
-            query=out1, value=enc_output, key=enc_output, 
+            query=out1, value=enc_output, key=enc_output, training=training, 
             attention_mask=padding_mask, return_attention_scores=True
         ) # (batch_size, max_length - 1, embedding_dim)
         out2 = self.layernorm2(attn2 + out1)
@@ -240,17 +237,16 @@ class TransformerOCR(CustomTrainingModel):
 
 
     @tf.function
-    def _compute_loss_and_metrics(self, batch):
+    def _compute_loss_and_metrics(self, batch, is_training=False):
         batch_images, batch_tokens = batch
-        features = self.cnn_model(batch_images) # (batch_size, receptive_size, embedding_dim)
-        enc_output = self.encoder(features) if self.encoder else features 
+        features = self.cnn_model(batch_images, training=is_training) # (batch_size, receptive_size, embedding_dim)
+        enc_output = self.encoder(features, training=is_training) if self.encoder else features 
 
         dec_seq_input = batch_tokens[:, :-1]
         dec_seq_real = batch_tokens[:, 1:]
-        dec_seq_pred, _ = self.decoder([dec_seq_input, enc_output]) # (batch_size, seq_length, embedding_dim)
+        dec_seq_pred, _ = self.decoder([dec_seq_input, enc_output], training=is_training) # (batch_size, seq_length, embedding_dim)
+        
         loss = self.loss(dec_seq_real, dec_seq_pred)
-
-        # Update training display result
         metrics = self._update_metrics(batch)
         return loss, {'loss': loss, **metrics}
 
@@ -259,16 +255,14 @@ class TransformerOCR(CustomTrainingModel):
     def predict(self, batch_images, return_attention=False):
         batch_size = batch_images.shape[0]
         seq_tokens, done = self._init_seq_tokens(batch_size, return_new_tokens=False)
-        features = self.cnn_model(batch_images) # (batch_size, receptive_size, embedding_dim)
-        enc_output = self.encoder(features) if self.encoder else features
+        features = self.cnn_model(batch_images, training=False) # (batch_size, receptive_size, embedding_dim)
+        enc_output = self.encoder(features, training=False) if self.encoder else features
         attentions = []
         
         for i in range(1, self.data_handler.max_length):
-            y_pred, attention_weights = self.decoder([seq_tokens[:, :-1], enc_output])
+            y_pred, attention_weights = self.decoder([seq_tokens[:, :-1], enc_output], training=False)
             attentions.append(attention_weights)
-
-            # Select the last token from the seq_length (max_length - 1) dimension
-            y_pred = y_pred[:, i - 1, :] # (batch_size, 1, vocab_size)
+            y_pred = y_pred[:, i - 1, :] # Select last token from seq_length (max_length - 1) dimension (batch_size, 1, vocab_size)
             seq_tokens, done = self._update_seq_tokens(y_pred, seq_tokens, done, i, return_new_tokens=False)
             if tf.executing_eagerly() and tf.reduce_all(done): break
 
