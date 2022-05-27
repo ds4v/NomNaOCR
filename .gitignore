@@ -7,6 +7,5 @@ Data collection/*
 *.cach
 *.h5
 *.ttf
-kfold.py
 callbacks.py
 preprocess_generator.py
