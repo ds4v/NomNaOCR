@@ -5,6 +5,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Embedding, Dense, Dropout, Add, MultiHeadAttention, LayerNormalization
+from tensorflow.keras.models import clone_model
 from models import CustomTrainingModel
 
 
@@ -66,15 +67,7 @@ class TransformerEmbedding(tf.keras.layers.Layer):
 
 
 class TransformerEncoderLayer(tf.keras.layers.Layer):
-    def __init__(
-        self,
-        num_heads,
-        embedding_dim, # d_model
-        feed_forward_units, # dff
-        dropout_rate = 0.1,
-        name = 'TransformerEncoderLayer',
-        **kwargs
-    ):
+    def __init__(self, num_heads, embedding_dim, feed_forward_units, dropout_rate, name='TransformerEncoderLayer', **kwargs):
         super(TransformerEncoderLayer, self).__init__(name=name, **kwargs)
         self.mha = MultiHeadAttention(num_heads=num_heads, key_dim=embedding_dim, dropout=dropout_rate)
         self.ffn = point_wise_ffn(embedding_dim, feed_forward_units)
@@ -95,15 +88,7 @@ class TransformerEncoderLayer(tf.keras.layers.Layer):
 
 
 class TransformerDecoderLayer(tf.keras.layers.Layer):
-    def __init__(
-        self,
-        num_heads,
-        embedding_dim, # d_model
-        feed_forward_units, # dff
-        dropout_rate = 0.1,
-        name = 'TransformerDecoderLayer',
-        **kwargs
-    ):
+    def __init__(self, num_heads, embedding_dim, feed_forward_units, dropout_rate, name='TransformerDecoderLayer', **kwargs):
         super(TransformerDecoderLayer, self).__init__(name=name, **kwargs)
         self.mha1 = MultiHeadAttention(num_heads=num_heads, key_dim=embedding_dim, dropout=dropout_rate)
         self.mha2 = MultiHeadAttention(num_heads=num_heads, key_dim=embedding_dim, dropout=dropout_rate)
@@ -185,7 +170,7 @@ def TransformerEncoderBlock(
 
 
 def TransformerDecoderBlock(
-    receptive_size, # CNN output features size
+    enc_shape, # (receptive_size, enc_channels)
     seq_length, # = max_length - 1, cause the inputs is shifted by 1
     vocab_size,
     num_layers, # N decoder layers
@@ -195,8 +180,8 @@ def TransformerDecoderBlock(
     dropout_rate,
     name = 'TransformerDecoderBlock'
 ):
+    enc_output = Input(shape=enc_shape, dtype='float32', name='encoder_output')
     dec_seq_input = Input(shape=(seq_length,), dtype='int64', name='decoder_sequence')
-    enc_output = Input(shape=(receptive_size, embedding_dim), dtype='float32', name='encoder_output')
     attention_weights = {}
 
     # Adding tokens embedding and positional encoding
