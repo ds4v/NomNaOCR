@@ -14,15 +14,14 @@ def draw_predicted_text(label, pred_label, fontdict, text_x):
 
     pred_start, start, end = 0, 0, 0
     while start <= end < label_length:
-        text_y = end * label_length * 5
+        text_y = end * label_length * (4 if label_length > 3 else 48 / label_length)
         actual_char = '[UNK]' if label[end] == '?' else label[end]
 
         if label[start:end + 1] in pred_label[pred_start:pred_length]:
             fontdict['color'] = 'dodgerblue'
             plt.text(text_x, text_y, actual_char, fontdict=fontdict)
         else:
-            if end < pred_length and end + 1 < label_length and \
-                pred_label[end] == label[end + 1]:
+            if end < pred_length and end + 1 < label_length and pred_label[end] == label[end + 1]:
                 fontdict['color'] = 'gray'
                 plt.text(text_x, text_y, actual_char, fontdict=fontdict)
             elif end < pred_length:
