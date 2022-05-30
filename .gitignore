@@ -5,7 +5,9 @@ Data collection/*
 !automa2txt.py
 !workflow.json
 *.cach
-*.h5
 *.ttf
+*.h5
+ContinouslyCRNN
+SC-Init-inject.ipynb
 callbacks.py
 preprocess_generator.py
