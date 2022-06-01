@@ -44,12 +44,16 @@ with open(url_path, 'w', encoding='utf-8') as url_file, \
 
         for idx, sentence in enumerate(text):
             sentence = sentence.strip()
-            if sentence == '': continue
+            if sentence in ['', '.']: continue
 
             if idx % 2 == 0: 
-                nom_file.write(sentence.replace(' ', '') + '\n')
+                sentence = re.sub(r'[!"#$%&()*+,.:;<=>@[\]^_`{|}~/\\\' ]', '', sentence)
+                sentence = re.sub(r'(matchu|vech0075|-)', '?', sentence)
+                nom_file.write(sentence + '\n')
                 # vocabs.extend(list(sentence))
-            else: modern_file.write(sentence + '\n')
+            else: 
+                sentence = sentence.replace('mat-chu', '[UNK]')
+                modern_file.write(sentence + '\n')
 
     # vocabs = set(vocabs) # remove duplicates in vocabs
     # vocabs.discard('-') # remove '-' from vocabs
