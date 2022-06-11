@@ -1,13 +1,19 @@
 __pycache__/
 .ipynb_checkpoints
+Ignores
+
+# Dataset items
 Datasets
 Data collection/*
+preprocess_generator.py
 !automa2txt.py
 !workflow.json
 *.cach
 *.ttf
+
+# Model items
 *.h5
+DBNet
 ContinouslyCRNN
 SC-Init-inject.ipynb
 callbacks.py
-preprocess_generator.py

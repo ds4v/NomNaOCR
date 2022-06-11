@@ -15,14 +15,15 @@ class BoundingBoxHandler:
             reduce(lambda x, y: map(operator.add, x, y), points),
             [len(points)] * 2
         ))
-        return sorted(points, key=lambda point: (
-            -135 - math.degrees(math.atan2(*tuple(
+        sorted_points = sorted(points, key=lambda point: (
+            -45 - math.degrees(math.atan2(*tuple(
                 map(operator.sub, point, center)
             )))) % 360)
+        return np.array(sorted_points, dtype='float32')
 
     # https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv
-    @staticmethod
-    def AdrianOrderPoints(points):
+    @staticmethod # This function fails to sort this box [[67,432],[173,388],[177,442],[74,495]]
+    def AdrianOrderPoints(points): 
         # Sort the points based on their x-coordinates
         xSorted = points[np.argsort(points[:, 0]), :]
         # Grab the left-most and right-most points from the sorted x-roodinate points
