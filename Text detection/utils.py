@@ -1,75 +1,106 @@
 import cv2
-import pyclipper
+import math
 import numpy as np
-from shapely.geometry import Polygon
+import matplotlib.pyplot as plt
 
 
-def resize(size, image, image_bboxes):
-    h, w, c = image.shape
-    scale = min(size / w, size / h)
-    h, w = int(h * scale), int(w * scale)
-    pad_image = np.zeros((size, size, c), image.dtype)
-    pad_image[:h, :w] = cv2.resize(image, (w, h))
-
-    new_bboxes = []
-    for bbox in image_bboxes:
-        points = np.array(bbox['points']).astype(np.float64) * scale
-        new_bboxes.append({
-            'transcription': bbox['transcription'], 
-            'points': points.tolist(), 
-            'difficult': bbox['difficult']
-        })
-    return pad_image, new_bboxes
+def resize_image_short_side(image, image_short_side=736):
+    height, width, _ = image.shape
+    if height < width:
+        new_height = image_short_side
+        new_width = int(round(new_height / height * width / 32) * 32)
+    else:
+        new_width = image_short_side
+        new_height = int(round(new_width / width * height / 32) * 32)
+    return cv2.resize(image, (new_width, new_height))
 
 
-def compute_distance(xs, ys, point_1, point_2):
-    square_distance_1 = np.square(xs - point_1[0]) + np.square(ys - point_1[1])
-    square_distance_2 = np.square(xs - point_2[0]) + np.square(ys - point_2[1])
-    square_distance = np.square(point_1[0] - point_2[0]) + np.square(point_1[1] - point_2[1])
+# https://github.com/faustomorales/keras-ocr/blob/master/keras_ocr/tools.py
+def draw_predictions(raw_image, boxes, scores, figsize=(15, 7)):
+    plt.figure(figsize=figsize)
+    image = raw_image.copy()
+    predictions = sorted(zip(boxes, scores), key=lambda pred: pred[0][:, 1].min())
+    left, right = [], []
+    
+    for box, score in predictions:
+        if box[:, 0].min() < image.shape[1] / 2: left.append((box, score))
+        else: right.append((box, score))
+        cv2.polylines(image, box[np.newaxis], color=(0, 255, 0), thickness=2, isClosed=True)
+    plt.imshow(image)
+    
+    for side, group in zip(['left', 'right'], [left, right]):
+        for index, (box, score) in enumerate(group):
+            y = 1 - (index / len(group))
+            xy = box[0] / np.array([image.shape[1], image.shape[0]])
+            xy[1] = 1 - xy[1]
+            plt.annotate(
+                text = f'{score:.4f}',
+                xy = xy,
+                xytext = (-0.05 if side == 'left' else 1.05, y),
+                xycoords = 'axes fraction',
+                arrowprops = {'arrowstyle': '->', 'color': 'r'},
+                color = 'r',
+                fontsize = 14,
+                horizontalalignment = 'right' if side == 'left' else 'left',
+            )
+    plt.axis('off')
+            
 
-    cosin = (square_distance - square_distance_1 - square_distance_2) /\
-            (2 * np.sqrt(square_distance_1 * square_distance_2) + 1e-6)
-    square_sin = np.nan_to_num(1 - np.square(cosin))
+class BoxPointsHandler: # Static class
+    @staticmethod
+    def order_points_clockwise(box_points):
+        points = np.array(box_points)
+        s = points.sum(axis=1)
+        diff = np.diff(points, axis=1)
+        quad_box = np.zeros((4, 2), dtype=np.float32)
+        quad_box[0] = points[np.argmin(s)]
+        quad_box[2] = points[np.argmax(s)]
+        quad_box[1] = points[np.argmin(diff)]
+        quad_box[3] = points[np.argmax(diff)]
+        return quad_box
 
-    result = np.sqrt(square_distance_1 * square_distance_2 * square_sin / (square_distance + 1e-6))
-    result[cosin < 0] = np.sqrt(np.fmin(square_distance_1, square_distance_2))[cosin < 0]
-    return result
+
+    @staticmethod
+    def get_extremum_points(box_points, image_height, image_width):
+        xmin = np.clip(np.floor(box_points[:, 0].min()).astype(np.int32), 0, image_width - 1)
+        ymin = np.clip(np.floor(box_points[:, 1].min()).astype(np.int32), 0, image_height - 1)
+        xmax = np.clip(np.ceil(box_points[:, 0].max()).astype(np.int32), 0, image_width - 1)
+        ymax = np.clip(np.ceil(box_points[:, 1].max()).astype(np.int32), 0, image_height - 1)
+        return xmin, ymin, xmax, ymax
+    
+    
+    @staticmethod
+    def get_middle_point(point1, point2):
+        return (point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2
+        
+    
+    @staticmethod
+    def get_center_points(text_length, box_points):
+        assert len(box_points) == 4
+        center_points = []
+        
+        left_middle_point = BoxPointsHandler.get_middle_point(box_points[0], box_points[3])
+        right_middle_point = BoxPointsHandler.get_middle_point(box_points[1], box_points[2])
+        
+        unit_x = (right_middle_point[0] - left_middle_point[0]) / text_length
+        unit_y = (right_middle_point[1] - left_middle_point[1]) / text_length
+        
+        for i in range(text_length):
+            x = left_middle_point[0] + unit_x / 2 + unit_x * i
+            y = left_middle_point[1] + unit_y / 2 + unit_y * i
+            center_points.append((x, y))
+        return center_points
+    
+    
+    @staticmethod
+    def get_point_distance(point1, point2):
+        dist_x = math.fabs(point1[0] - point2[0])
+        dist_y = math.fabs(point1[1] - point2[1])
+        return math.sqrt(dist_x**2 + dist_y**2)
 
 
-def draw_thresh_map(points, canvas, mask, shrink_ratio=0.4):
-    points = np.array(points)
-    polygon = Polygon(points)
-    assert points.ndim == 2 and points.shape[-1] == 2 and polygon.is_valid
-
-    padding = pyclipper.PyclipperOffset()
-    padding.AddPath(points, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
-    distance = polygon.area * (1 - shrink_ratio**2) / polygon.length
-    padded_polygon = np.array(padding.Execute(distance)[0])
-    cv2.fillPoly(mask, [padded_polygon.astype(np.int32)], 1.0)
-
-    xmin, xmax = padded_polygon[:, 0].min(), padded_polygon[:, 0].max()
-    ymin, ymax = padded_polygon[:, 1].min(), padded_polygon[:, 1].max()
-    width = xmax - xmin + 1
-    height = ymax - ymin + 1
-
-    points[:, 0] = points[:, 0] - xmin
-    points[:, 1] = points[:, 1] - ymin
-    xs = np.broadcast_to(np.linspace(0, width - 1, num=width).reshape(1, width), (height, width))
-    ys = np.broadcast_to(np.linspace(0, height - 1, num=height).reshape(height, 1), (height, width))
-
-    distance_map = np.zeros((points.shape[0], height, width), dtype=np.float32)
-    for i in range(points.shape[0]):
-        j = (i + 1) % points.shape[0]
-        absolute_distance = compute_distance(xs, ys, points[i], points[j])
-        distance_map[i] = np.clip(absolute_distance / distance, 0, 1)
-
-    xmin_valid = min(max(0, xmin), canvas.shape[1] - 1)
-    xmax_valid = min(max(0, xmax), canvas.shape[1] - 1)
-    ymin_valid = min(max(0, ymin), canvas.shape[0] - 1)
-    ymax_valid = min(max(0, ymax), canvas.shape[0] - 1)
-
-    distance_map = np.min(distance_map, axis=0)
-    canvas[ymin_valid:ymax_valid, xmin_valid:xmax_valid] = np.fmax(1 - distance_map[
-        ymin_valid - ymin:ymax_valid - ymin,
-        xmin_valid - xmin:xmax_valid - xmin
-    ], canvas[ymin_valid:ymax_valid, xmin_valid:xmax_valid])
+    @staticmethod
+    def get_diag(box_points):
+        diag1 = BoxPointsHandler.get_point_distance(box_points[0], box_points[2])
+        diag2 = BoxPointsHandler.get_point_distance(box_points[1], box_points[3])
+        return (diag1 + diag2) / 2

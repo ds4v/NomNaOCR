@@ -1,13 +1,13 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2D, Conv2DTranspose, BatchNormalization, Activation
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose, BatchNormalization, ReLU
 
 
 class ConvBnRelu(tf.keras.layers.Layer):
     def __init__(self, filters=64, kernel_size=3, use_bias=True, name='ConvBnRelu', **kwargs):
         super(ConvBnRelu, self).__init__(name=name, **kwargs)
-        self.conv = Conv2D(filters, kernel_size, padding='same', kernel_initializer='he_normal', use_bias=use_bias)
+        self.conv = Conv2D(filters, kernel_size, padding='same', use_bias=use_bias)
         self.bn = BatchNormalization()
-        self.relu = Activation('relu')
+        self.relu = ReLU()
         
     def call(self, inputs, training):
         x = self.conv(inputs)
@@ -15,19 +15,19 @@ class ConvBnRelu(tf.keras.layers.Layer):
         return self.relu(x)
 
 
-class DeconvolutionalMap(tf.keras.layers.Layer):
-    def __init__(self, filters=64, name='DeconvolutionalMap', **kwargs):
-        super(DeconvolutionalMap, self).__init__(name=name, **kwargs)
-        self.conv_bn = ConvBnRelu(filters, 3, use_bias=False)
-        self.deconv1 = Conv2DTranspose(filters, 2, strides=2, kernel_initializer='he_normal', use_bias=False)
-        self.bn2 = BatchNormalization()
-        self.relu2 = Activation('relu')
-        self.deconv2 = Conv2DTranspose(1, 2, strides=2, kernel_initializer='he_normal', activation='sigmoid')
+class DeConvMap(tf.keras.layers.Layer):
+    def __init__(self, filters=64, name='DeConvMap', **kwargs):
+        super(DeConvMap, self).__init__(name=name, **kwargs)
+        self.conv_bn = ConvBnRelu(filters, kernel_size=3, use_bias=False)
+        self.deconv1 = Conv2DTranspose(filters, kernel_size=2, strides=2, use_bias=False)
+        self.bn = BatchNormalization()
+        self.relu = ReLU()
+        self.deconv2 = Conv2DTranspose(1, kernel_size=2, strides=2, activation='sigmoid')
         
     def call(self, inputs, training):
         x = self.conv_bn(inputs)
         x = self.deconv1(x)
-        x = self.bn2(x, training=training)
-        x = self.relu2(x)
+        x = self.bn(x, training=training)
+        x = self.relu(x)
         x = self.deconv2(x)
         return tf.squeeze(x, axis=-1)
