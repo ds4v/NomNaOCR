@@ -14,6 +14,4 @@ preprocess_generator.py
 # Model items
 *.h5
 DBNet
-ContinouslyCRNN
-SC-Init-inject.ipynb
 callbacks.py
