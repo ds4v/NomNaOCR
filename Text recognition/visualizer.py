@@ -3,35 +3,35 @@ from matplotlib.patches import Patch
 from matplotlib.font_manager import FontProperties
 
 
-def draw_predicted_text(label, pred_label, fontdict, text_x):
+def draw_predicted_text(label, pred_label, fontdict, width, height):
     label = label.replace('[UNK]', '?')
     label_length, pred_length = len(label), len(pred_label)
 
     if pred_label == label:
         fontdict['color'] = 'green'
-        plt.text(text_x, 0, '\n'.join(pred_label), fontdict=fontdict)
+        plt.text(width, 0, '\n'.join(pred_label), fontdict=fontdict)
         return 
 
     pred_start, start, end = 0, 0, 0
     while start <= end < label_length:
-        text_y = end * label_length * (4 if label_length > 3 else 48 / label_length)
+        text_y = end * height / label_length
         actual_char = '[UNK]' if label[end] == '?' else label[end]
 
         if label[start:end + 1] in pred_label[pred_start:pred_length]:
             fontdict['color'] = 'dodgerblue'
-            plt.text(text_x, text_y, actual_char, fontdict=fontdict)
+            plt.text(width, text_y, actual_char, fontdict=fontdict)
         else:
             if end < pred_length and end + 1 < label_length and pred_label[end] == label[end + 1]:
                 fontdict['color'] = 'gray'
-                plt.text(text_x, text_y, actual_char, fontdict=fontdict)
+                plt.text(width, text_y, actual_char, fontdict=fontdict)
             elif end < pred_length:
                 fontdict['color'] = 'red'
-                plt.text(text_x, text_y, pred_label[end], fontdict=fontdict)
+                plt.text(width, text_y, pred_label[end], fontdict=fontdict)
                 fontdict['color'] = 'black'
-                plt.text(text_x + 35, text_y, actual_char, fontdict=fontdict)
+                plt.text(width * 2, text_y, actual_char, fontdict=fontdict)
             else: 
                 fontdict['color'] = 'gray'
-                plt.text(text_x, text_y, actual_char, fontdict=fontdict)
+                plt.text(width, text_y, actual_char, fontdict=fontdict)
                 
             pred_start = end
             start = end + 1
@@ -64,12 +64,12 @@ def visualize_images_labels(
     for i in range(min(nrows * ncols, num_of_labels)):
         plt.subplot(nrows, ncols, i + 1)
         image, label = plt.imread(img_paths[i]), labels[i]
-        text_x = image.shape[1] * 1.2
+        height, width, channel = image.shape
         plt.imshow(image)
 
         fontdict['color'] = 'black'  # Reset the color
-        if pred_labels: draw_predicted_text(label, pred_labels[i], fontdict, text_x)
-        else: plt.text(text_x, 0, '\n'.join(label), fontdict=fontdict)
+        if pred_labels: draw_predicted_text(label, pred_labels[i], fontdict, width, height)
+        else: plt.text(width, 0, '\n'.join(label), fontdict=fontdict)
         plt.axis('off')
 
     if legend_loc and annotate_loc and pred_labels:
