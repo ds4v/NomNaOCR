@@ -46,8 +46,7 @@ def visualize_images_labels(
     subplot_size = (2, 8), # tuple: (rows, columns) to display
     legend_loc = None, # Only for predictions,
     annotate_loc = None, # Only for predictions
-    font_path = None, 
-    text_x = None # Position to plot actual label
+    font_path = None
 ):
     nrows, ncols = subplot_size 
     num_of_labels = len(labels)
@@ -65,6 +64,7 @@ def visualize_images_labels(
     for i in range(min(nrows * ncols, num_of_labels)):
         plt.subplot(nrows, ncols, i + 1)
         image, label = plt.imread(img_paths[i]), labels[i]
+        text_x = image.shape[1] * 1.2
         plt.imshow(image)
 
         fontdict['color'] = 'black'  # Reset the color
