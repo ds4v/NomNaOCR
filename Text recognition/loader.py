@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from utils import ctc_decode
-from string import punctuation
+from string import printable
 from collections import defaultdict, Counter
 
 
@@ -58,9 +58,9 @@ class DataImporter:
 
 
     def is_clean_text(self, text):
-        not_nom_chars = r'\sA-Za-z0-9áàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệóòỏõọôốồổỗộơớờởỡợíìỉĩịúùủũụưứừửữựýỳỷỹỵđ'
-        pattern = re.compile(f'[{not_nom_chars}{re.escape(punctuation)}]')
-        return not bool(re.search(pattern, text))
+        not_nom_chars = r'\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệóòỏõọôốồổỗộơớờởỡợíìỉĩịúùủũụưứừửữựýỳỷỹỵđ'
+        pattern = re.compile(f'[{not_nom_chars}{re.escape(printable)}]')
+        return not bool(re.search(pattern, text.lower()))
 
 
     def __str__(self):
