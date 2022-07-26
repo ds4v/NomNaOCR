@@ -80,3 +80,19 @@ class BahdanauAttention(tf.keras.layers.Layer):
         context_vector = attention_weights * enc_output
         context_vector = tf.reduce_sum(context_vector, axis=1)
         return context_vector, attention_weights
+
+
+class AdditiveAttention(tf.keras.layers.Layer):
+    def __init__(self, units, name='AdditiveAttention', **kwargs):
+        super(AdditiveAttention, self).__init__(name=name, **kwargs)
+        self.W1 = Dense(units, use_bias=False)
+        self.W2 = Dense(units, use_bias=False)
+        self.attention = tf.keras.layers.AdditiveAttention()
+
+    def call(self, query, value):
+        w1_query, w2_key = self.W1(query), self.W2(value)
+        context_vector, attention_weights = self.attention(
+            inputs = [w1_query, value, w2_key],
+            return_attention_scores = True,
+        )
+        return context_vector, attention_weights

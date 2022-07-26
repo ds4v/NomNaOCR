@@ -9,9 +9,12 @@ preprocess_generator.py
 !automa2txt.py
 !workflow.json
 *.cach
+*.txt
 *.ttf
 
 # Model items
+Text detection/*
+!*.yml
 *.h5
-DBNet
+*.csv
 callbacks.py
