@@ -121,7 +121,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 - Với Detection mình sử dụng [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) để huấn luyện với các file config tương ứng trong folder [Text detection](./Text%20detection/).
 - Với Recognition, trong quá trình **PreTraining** trên bộ **Synthetic Nom String** của [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html), mình nhận thấy khi thực hiện **Skip Connection** (SC) cho **feature map** với 1 lớp **X** có cùng shape và nằm xa nó nhất sẽ cải thiện đáng kể hiệu suất mô hình. Vì vậy, mình có thử nghiệm 2 phương pháp **Skip Connection** cơ bản là **Addition** và **Concatenation** cho các mô hình khả thi nhất (tồn tại lớp **X** nói trên).
 
-👉 Xem thêm [thesis_vi.pdf](./thesis_vi.pdf) và [slide_vi.pptx](./slide_vi.pptx) để biết thêm thông tin chi tiết.
+👉 Download weights của các mô hình [tại đây](https://drive.google.com/file/d/1lzFX4llRK-e18a95Lg4plXoSgjXXgzL5/view?usp=sharing).
 
 ### 2. Quy trình đánh giá
 
@@ -134,6 +134,8 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
   - [SC-CNNxTransformer_finetune.ipynb](./Text%20recognition/TransformerOCR/SC-CNNxTransformer_finetune.ipynb): có **Character Accuracy** và **CER** cao nhất.
 
   ![](./Assets/example_rec.jpg)
+
+👉 Xem thêm [thesis_vi.pdf](./thesis_vi.pdf) và [slide_vi.pptx](./slide_vi.pptx) để biết thêm thông tin chi tiết.
 
 ## IV. Kết quả thực nghiệm
 
