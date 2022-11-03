@@ -24,6 +24,8 @@ Sau khi kết thúc Nghìn năm Bắc thuộc, ông cha ta với ý thức tự 
 
 ### 2. Các công việc đã thực hiện
 
+Mình cùng người đồng đội [Nguyễn Đức Duy Anh](https://github.com/duyanh1909) đã thực hiện đề tài này trong gần 8 tháng dưới sự chỉ dẫn tận tình của TS. Đỗ Trọng Hợp ([Khoa KH&KTTT](https://fit.uit.edu.vn) - VNUHCM UIT) và đã thu được một số thành quả nhất định:
+
 - Xây dựng thành công bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr):
   - Giải quyết 2 bài toán **Text Detection** và **Text Recognition** cho các tài liệu lịch sử viết bằng Hán-Nôm.
   - Có kích thước **lớn nhất Việt Nam hiện tại** với tổng cộng **2953 Page** và **38318 Patch**.
@@ -35,7 +37,7 @@ Sau khi kết thúc Nghìn năm Bắc thuộc, ông cha ta với ý thức tự 
   - https://github.com/trhgquan/OCR_chu_nom
   - https://www.kaggle.com/competitions/kuzushiji-recognition
 
-👉 Xem thêm [thesis_vi.pdf](./thesis_vi.pdf) và [slide_vi.pptx](./slide_vi.pptx) để biết thêm thông tin chi tiết.
+👉 Mọi người có thể xem thêm [bài viết](https://scale-ml.github.io/docs/OCR) của mình về OCR cũng như sơ lược các mô hình sử dụng trong project này hoặc có thể xem chi tiết hơn tại 2 file [thesis_vi.pdf](./thesis_vi.pdf) và [slide_vi.pptx](./slide_vi.pptx).
 
 ## II. Bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr)
 
@@ -167,15 +169,15 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 - Các bạn trong team gán nhãn, những người đã hào phóng hy sinh một phần thời gian biểu để tham gia vào nghiên cứu cũng như giúp nhóm có thể hoàn thành bộ dữ liệu thật tốt, từ đó góp phần biến đề tài này thành hiện thực:
 
-  | Thành viên (KHDL - VNUHCM UIT)                                                    |          Email         |
-  |-----------------------------------------------------------------------------------|:----------------------:|
-  | [Ngô Đức Vũ](https://www.facebook.com/ngovu2.0)                                   | 20520950@gm.uit.edu.vn |
-  | [Trịnh Thế Hiển](https://www.facebook.com/hien.trinhthe.98)                       | 20521310@gm.uit.edu.vn |
-  | [Phan Châu Thắng](https://www.facebook.com/phanchauthang)                         | 20520929@gm.uit.edu.vn |
-  | [Nguyễn Hùng Trung Hiếu](https://www.facebook.com/profile.php?id=100010696068136) | 20521323@gm.uit.edu.vn |
-  | [Châu Tấn](https://www.facebook.com/TomatoFT)                                     | 20520926@gm.uit.edu.vn |
-  | [Nguyễn Minh Trí](https://www.facebook.com/profile.php?id=100010288122956)        | 20522052@gm.uit.edu.vn |
-  | [Phạm Phú Phước](https://www.facebook.com/profile.php?id=100010066906493)         | 18521031@gm.uit.edu.vn |
+  | Thành viên (KHDL - VNUHCM UIT)                                                    | Email                  | GitHub                                      |
+  |-----------------------------------------------------------------------------------|------------------------|---------------------------------------------|
+  | [Ngô Đức Vũ](https://www.facebook.com/ngovu2.0)                                   | 20520950@gm.uit.edu.vn | [vungods](https://github.com/vungods)              |
+  | [Trịnh Thế Hiển](https://www.facebook.com/hien.trinhthe.98)                       | 20521310@gm.uit.edu.vn | [HienTheTrinh](https://github.com/HienTheTrinh)         |
+  | [Phan Châu Thắng](https://www.facebook.com/phanchauthang)                         | 20520929@gm.uit.edu.vn |                                             |
+  | [Nguyễn Hùng Trung Hiếu](https://www.facebook.com/profile.php?id=100010696068136) | 20521323@gm.uit.edu.vn | [hellofromtheothersky](https://github.com/hellofromtheothersky) |
+  | [Châu Tấn](https://www.facebook.com/TomatoFT)                                     | 20520926@gm.uit.edu.vn | [TomatoFT](https://github.com/TomatoFT)             |
+  | [Nguyễn Minh Trí](https://www.facebook.com/profile.php?id=100010288122956)        | 20522052@gm.uit.edu.vn |                                             |
+  | [Phạm Phú Phước](https://www.facebook.com/profile.php?id=100010066906493)         | 18521031@gm.uit.edu.vn |                                             |
 
 - Bạn [Nguyễn Ngọc Thịnh](https://www.facebook.com/TanyaNguyen99) (Đông Phương học - VNUHCM USSH) đã giúp mình giải đáp những thắc mắc liên quan đến chữ Hán-Nôm trong đề tài này.
 
@@ -186,7 +188,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 ## VI. TODO
 
 - [ ] [NomNaOCRpp](https://github.com/ds4v/NomNaOCRpp): Thử nghiệm các mô hình hiện đại hơn hay các mô hình SOTA trên các bộ dữ liệu benchmark nổi tiếng như ICDAR [2013](https://paperswithcode.com/dataset/icdar-2013) và [2015](https://paperswithcode.com/dataset/icdar-2015).
-- [ ] [NomNaNMT](https://github.com/ds4v/NomNaNMT): Phát triển bài toán dịch máy để dịch các phiên âm Hán-Nôm và từ đó dịch sang Quốc Ngữ hiện đại.
+- [ ] [NomNaNMT](https://github.com/ds4v/NomNaNMT): Phát triển bài toán dịch máy để dịch các phiên âm Hán-Nôm sang Tiếng Việt.
 - [ ] [NomNaSite](https://github.com/ds4v/NomNaSite): Xây dựng WebApp để ứng dụng các bài toán đã triển khai vào thực tế.
 - [ ] Sử dụng **Beam search** hay xa hơn nữa là **Language model** để giải mã đầu ra (decode) cho **Text Recognition**, tham khảo từ các project của [Harald Scheidl](https://github.com/githubharald).
 - [ ] Ghi nhận lại các lỗi trên [VNPF](http://www.nomfoundation.org) vào 1 file. Trong quá trình làm dataset, nhóm mình có phát hiện 1 vài lỗi trong phần dịch của [VNPF](http://www.nomfoundation.org) như 1 số phần dịch không khớp với Page hiện tại, chữ dịch sai so với hình, dịch thừa chữ hoặc thiếu chữ, .... Sau đây là 1 vài ví dụ:
