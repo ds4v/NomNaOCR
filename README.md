@@ -96,7 +96,7 @@ Nhóm mình sử dụng [PPOCRLabel](https://github.com/PaddlePaddle/PaddleOCR/b
 - [annotators.zip](./Data%20labeling/PPOCRLabel/annotators.zip): dành cho người gán nhãn, mình đã bỏ đi các chức năng không cần thiết như `Auto annotation`, ... để tránh việc nhấn tùm lum có thể gây sai sót khi gán nhãn cũng như để việc cài đặt dễ dàng và ít lỗi hơn.
 - [composer.zip](./Data%20labeling/PPOCRLabel/composer.zip): dành cho người xây dựng guideline (Mình sẽ gọi là **Composer**) dùng để chạy `Auto annotation`, khá đầy đủ chức năng so với bản gốc. Mình có bỏ đi thao tác *Auto recognition* khi chạy `Auto annotation` và sử dụng nhãn cho text là `TEMPORARY`.
 
-👉 Các Annotator sẽ thay thế nhãn `TEMPORARY` theo hướng dẫn trong các guideline dành cho [thơ](./Data%20labeling/Guideline-poem.pdf) và cho [văn xuôi](./Data%20labeling/Guideline-prose.pdf). Cuối cùng là thực hiện map nhãn thật được thu thập từ [VNPF](http://www.nomfoundation.org).
+👉 Các Annotator sẽ thay thế nhãn `TEMPORARY` theo hướng dẫn trong các guideline dành cho [thơ](./Data%20labeling/Guideline-poem.pdf) và cho [văn xuôi](./Data%20labeling/Guideline-prose.pdf). Cuối cùng là thực hiện [map nhãn thật](./Data%20labeling/mapping.py) được thu thập từ [VNPF](http://www.nomfoundation.org).
 
 ![](./Assets/labeling.jpg)
 
