@@ -106,7 +106,7 @@ Tuy nhiên, với các ảnh trong [NomNaOCR](https://www.kaggle.com/datasets/qu
 - Sau đó đưa ảnh vào [PPOCRLabel](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/PPOCRLabel/README.md) để dự đoán các `bounding box`. 
 - Khi dự đoán xong, chạy file [unrotated_convertor.py](./Data%20labeling/Auto%20annotation/unrotated_convertor.py) để xoay dọc các `bounding box` lại.
 
-Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) được xử lý và thu được **2953 Page** (đã bỏ đi 1 Page scan lỗi và 2 Page trống). Bằng cách gán nhãn bán thủ công, nhóm mình đã thu được thêm **38318 Patch**. Tiếp theo, nhóm mình sử dụng công thức từ bộ dữ liệu [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html) để chia dữ liệu 1 cách hiệu quả nhất. Phần **Synthetic Nom String** thuộc bộ dữ liệu này cũng được dùng để thực hiện **Pretraining** cho các mô hình **Recognition**.
+Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) được xử lý và thu được **2953 Page** (đã bỏ đi 1 Page scan lỗi và 2 Page trống). Bằng cách gán nhãn bán thủ công, nhóm mình đã thu được thêm **38318 Patch**. Tiếp theo, nhóm mình sử dụng [công thức](./Data%20splitting/IHRNomDB_Rs.py) từ bộ dữ liệu [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html) để [chia dữ liệu Recognition](./Data%20splitting/reg_split.ipynb) 1 cách hiệu quả nhất. Phần **Synthetic Nom String** thuộc bộ dữ liệu này cũng được dùng để thực hiện **Pretraining** cho các mô hình **Recognition**.
 
 |   **Tập dữ liệu**   | **Số điểm dữ liệu** | **Tỉ lệ ký tự giao nhau** |
 |:-------------------:|:-------------------:|:-------------------------:|
