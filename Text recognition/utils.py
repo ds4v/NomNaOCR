@@ -1,4 +1,6 @@
+import csv
 import tensorflow as tf
+from tqdm import tqdm
 
 
 def ctc_decode(predictions, max_length):
@@ -41,3 +43,13 @@ def sparse2dense(tensor, shape):
     tensor = tf.sparse.to_dense(tensor, default_value=-1)
     tensor = tf.cast(tensor, tf.float32)
     return tensor
+
+
+def rec2csv(file_name, patch_list, data_handler, model, use_ctc_decode=False):
+    with open(file_name, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.writer(f)
+        for img_path in tqdm(patch_list):
+            image = data_handler.process_image(img_path)
+            pred_tokens = model.predict(tf.expand_dims(image, axis=0))
+            pred_labels = data_handler.tokens2texts(pred_tokens, use_ctc_decode)
+            writer.writerow([img_path, pred_labels[0]])
