@@ -1,6 +1,7 @@
 __pycache__/
 .ipynb_checkpoints
 Ignores
+*.docx
 
 # Dataset items
 Datasets
