@@ -3,7 +3,6 @@ Implementation of label mapping process:
 - Author: Nguyen Duc Duy Anh
 - GitHub: https://github.com/duyanh1909
 '''
-
 import os
 import re
 import ast
@@ -97,8 +96,7 @@ for path in glob.glob(f'{ROOT_PATH}/*/{MAP_FOLDER_NAME}/*.txt'):
     with open(path, 'r', encoding='utf-8') as f:
         if len(f.readlines()) > 35: print(path)
         
-'''
-- Output:
+''' Output:
 ROOT_PATH/DVSKTT-2 Ngoai ky toan thu/MAP_FOLDER_NAME/DVSKTT_ngoai_II_17a.txt
 ROOT_PATH/DVSKTT-2 Ngoai ky toan thu/MAP_FOLDER_NAME/DVSKTT_ngoai_V_25b.txt
 '''
