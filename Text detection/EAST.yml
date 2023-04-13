@@ -19,7 +19,7 @@ Architecture:
     algorithm: EAST
     Transform:
     Backbone:
-        name: ResNet
+        name: ResNet_vd
         layers: 18
     Neck:
         name: EASTFPN

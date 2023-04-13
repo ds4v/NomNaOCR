@@ -94,7 +94,7 @@ https://user-images.githubusercontent.com/50880271/195821433-59c35cec-af04-4706-
 
 Nhóm mình sử dụng [PPOCRLabel](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/PPOCRLabel/README.md) thuộc hệ sinh thái của [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) để gán tự động các `bounding box`. Tool này mặc định sử dụng [DBNet](https://github.com/MhLiao/DB) để phát hiện văn bản, đây cũng là mô hình nhóm mình sẽ thử nghiệm cho bài toán **Text Detection**. Ở đây, mình có phân tool này ra thành 2 bản:
 - [annotators.zip](./Data%20labeling/PPOCRLabel/annotators.zip): dành cho người gán nhãn, mình đã bỏ đi các chức năng không cần thiết như `Auto annotation`, ... để tránh việc nhấn tùm lum có thể gây sai sót khi gán nhãn cũng như để việc cài đặt dễ dàng và ít lỗi hơn.
-- [composer.zip](./Data%20labeling/PPOCRLabel/composer.zip): dành cho người xây dựng guideline (Mình sẽ gọi là **Composer**) dùng để chạy `Auto annotation`, khá đầy đủ chức năng so với bản gốc. Mình có bỏ đi thao tác *Auto recognition* khi chạy `Auto annotation` và sử dụng nhãn cho text là `TEMPORARY`.
+- [composer.zip](./Data%20labeling/PPOCRLabel/composer.zip): dành cho người xây dựng guideline (Mình sẽ gọi là **Composer**) dùng để chạy `Auto annotation`, khá đầy đủ chức năng so với bản gốc. Mình có bỏ đi thao tác *Auto recognition* khi chạy `Auto annotation` và sử dụng nhãn cho text là `TEMPORARY`. Ngoài ra, mình cũng đã thực hiện xoay ảnh lại để khớp với đầu vào các mô hình **Recognition** khi chạy chức năng `Export Recognition Result`.
 
 👉 Các Annotator sẽ thay thế nhãn `TEMPORARY` theo hướng dẫn trong các guideline dành cho [thơ](./Data%20labeling/Guideline-poem.pdf) và cho [văn xuôi](./Data%20labeling/Guideline-prose.pdf). Cuối cùng là thực hiện [map nhãn thật](./Data%20labeling/mapping.py) được thu thập từ [VNPF](http://www.nomfoundation.org).
 
@@ -106,7 +106,7 @@ Tuy nhiên, với các ảnh trong [NomNaOCR](https://www.kaggle.com/datasets/qu
 - Sau đó đưa ảnh vào [PPOCRLabel](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/PPOCRLabel/README.md) để dự đoán các `bounding box`. 
 - Khi dự đoán xong, chạy file [unrotated_convertor.py](./Data%20labeling/Auto%20annotation/unrotated_convertor.py) để xoay dọc các `bounding box` lại.
 
-Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) được xử lý và thu được **2953 Page** (đã bỏ đi 1 Page scan lỗi và 2 Page trống). Bằng cách gán nhãn bán thủ công, nhóm mình đã thu được thêm **38318 Patch**. Tiếp theo, nhóm mình sử dụng [công thức](./Data%20splitting/IHRNomDB_Rs.py) từ bộ dữ liệu [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html) để [chia dữ liệu Recognition](./Data%20splitting/reg_split.ipynb) 1 cách hiệu quả nhất. Phần **Synthetic Nom String** thuộc bộ dữ liệu này cũng được dùng để thực hiện **Pretraining** cho các mô hình **Recognition**.
+Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) được xử lý và thu được **2953 Page** (đã bỏ đi 1 Page scan lỗi và 2 Page trống). Bằng cách gán nhãn bán thủ công, nhóm mình đã thu được thêm **38318 Patch**. Tiếp theo, nhóm mình sử dụng [công thức](./Data%20splitting/IHRNomDB_Rs.py) từ bộ dữ liệu [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html) để [chia dữ liệu Recognition](./Data%20splitting/split_patches.py) 1 cách hiệu quả nhất. Phần **Synthetic Nom String** thuộc bộ dữ liệu này cũng được dùng để thực hiện **Pretraining** cho các mô hình **Recognition**.
 
 |   **Tập dữ liệu**   | **Số điểm dữ liệu** | **Tỉ lệ ký tự giao nhau** |
 |:-------------------:|:-------------------:|:-------------------------:|
@@ -142,7 +142,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 ## IV. Kết quả thực nghiệm
 
 <details>
-  <summary><h3 style="display:inline">1. Text Detection</h3></summary>
+  <summary><h3 style="display:inline">1. <a href="./Text%20detection/CLEval.ipynb">Text Detection</a></h3></summary>
   
   ![](./Assets/det_vi.jpg)
 
@@ -159,7 +159,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 </details>
 <details>
-  <summary><h3 style="display:inline">3. End-to-End</h3></summary>
+  <summary><h3 style="display:inline">3. <a href="./E2E_eval.ipynb">End-to-End</a></h3></summary>
   
   ![](./Assets/end2end_vi.jpg)
 
