@@ -1,0 +1,11 @@
+
+!mkdir "/tmp/Patches"
+!mkdir "/tmp/Patches/Luc Van Tien"
+!mkdir "/tmp/Patches/Tale of Kieu 1866"
+!mkdir "/tmp/Patches/Tale of Kieu 1871"
+!mkdir "/tmp/Patches/Tale of Kieu 1872"
+!mkdir "/tmp/Patches/DVSKTT-1 Quyen thu"
+!mkdir "/tmp/Patches/DVSKTT-2 Ngoai ky toan thu"
+!mkdir "/tmp/Patches/DVSKTT-3 Ban ky toan thu"
+!mkdir "/tmp/Patches/DVSKTT-4 Ban ky thuc luc"
+!mkdir "/tmp/Patches/DVSKTT-5 Ban ky tuc bien"
