@@ -13,8 +13,7 @@ preprocess_generator.py
 
 # Model items
 Text detection/*
-!CLEval.ipynb
+!Text detection/Evaluation
 !*.yml
 *.h5
-*.csv
 callbacks.py
