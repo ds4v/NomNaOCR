@@ -9,7 +9,6 @@ Data collection/*
 preprocess_generator.py
 !automa2txt.py
 !workflow.json
-*.cach
 *.ttf
 
 # Model items
