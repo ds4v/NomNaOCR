@@ -5,7 +5,7 @@
 https://user-images.githubusercontent.com/50880271/195821293-367876c1-818d-40e9-b4b5-381d2fc831c3.mp4
 
 - Audio: [ĐÀ LỊCH SỬ- Tóm tắt lịch sử Việt Nam - Từ Nguyễn Phương](https://youtu.be/1dwFsbbPJ80?t=686)
-- Demo: https://share.streamlit.io/ds4v/nomnasite/main/app.py
+- Demo: https://github.com/ds4v/NomNaSite
 
 ## I. Tổng quan
 
@@ -142,7 +142,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 ## IV. Kết quả thực nghiệm
 
 <details>
-  <summary><h3 style="display:inline">1. <a href="./Text%20detection/CLEval.ipynb">Text Detection</a></h3></summary>
+  <summary><h3 style="display:inline">1. Text Detection</a></h3></summary>
   
   ![](./Assets/det_vi.jpg)
 
@@ -159,7 +159,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 </details>
 <details>
-  <summary><h3 style="display:inline">3. <a href="./E2E_eval.ipynb">End-to-End</a></h3></summary>
+  <summary><h3 style="display:inline">3. End-to-End</a></h3></summary>
   
   ![](./Assets/end2end_vi.jpg)
 
@@ -187,10 +187,15 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 ## VI. TODO
 
-- [ ] [NomNaOCRpp](https://github.com/ds4v/NomNaOCRpp): Thử nghiệm các mô hình hiện đại hơn hay các mô hình SOTA trên các bộ dữ liệu benchmark nổi tiếng như ICDAR [2013](https://paperswithcode.com/dataset/icdar-2013) và [2015](https://paperswithcode.com/dataset/icdar-2015).
-- [ ] [NomNaNMT](https://github.com/ds4v/NomNaNMT): Phát triển bài toán dịch máy để dịch các phiên âm Hán-Nôm sang Tiếng Việt.
-- [ ] [NomNaSite](https://github.com/ds4v/NomNaSite): Xây dựng WebApp để ứng dụng các bài toán đã triển khai vào thực tế.
 - [ ] Sử dụng **Beam search** hay xa hơn nữa là **Language model** để giải mã đầu ra (decode) cho **Text Recognition**, tham khảo từ các project của [Harald Scheidl](https://github.com/githubharald).
+- [ ] [NomNaOCRpp](https://github.com/ds4v/NomNaOCRpp): Thử nghiệm các mô hình hiện đại hơn hay các mô hình SOTA trên các bộ dữ liệu benchmark nổi tiếng như ICDAR [2013](https://paperswithcode.com/dataset/icdar-2013) và [2015](https://paperswithcode.com/dataset/icdar-2015).
+- [ ] [NomNaSite](https://github.com/ds4v/NomNaSite): Xây dựng WebApp để ứng dụng các bài toán đã triển khai vào thực tế.
+- [ ] [NomNaNMT](https://github.com/ds4v/NomNaNMT), phát triển 2 bài toán dịch máy sau: 
+  - [x] Dịch các phiên âm Hán-Nôm sang chữ Quốc Ngữ: đã được triển khai bởi [HCMUS](https://www.clc.hcmus.edu.vn/?page_id=3039).
+  - [ ] Từ phần Quốc Ngữ phía trên sẽ dịch tiếp ra Tiếng Việt (văn phong hiện tại).
+
+  ![](./Assets/nomnanmt.jpg)
+
 - [ ] Ghi nhận lại các lỗi trên [VNPF](http://www.nomfoundation.org) vào 1 file. Trong quá trình làm dataset, nhóm mình có phát hiện 1 vài lỗi trong phần dịch của [VNPF](http://www.nomfoundation.org) như 1 số phần dịch không khớp với Page hiện tại, chữ dịch sai so với hình, dịch thừa chữ hoặc thiếu chữ, .... Sau đây là 1 vài ví dụ:
 
   |                 Miêu tả lỗi                 |       Tác phẩm       | Trang | Vị trí trong ảnh |                             Ghi chú                            |
