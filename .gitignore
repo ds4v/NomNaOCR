@@ -6,7 +6,6 @@ Ignores
 # Dataset items
 Datasets
 Data collection/*
-preprocess_generator.py
 !automa2txt.py
 !workflow.json
 *.ttf
