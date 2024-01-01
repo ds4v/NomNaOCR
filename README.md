@@ -1,4 +1,4 @@
-[English]() | Tiếng Việt
+[English](./README_en.md) | Tiếng Việt
 
 # Số hóa tài liệu lịch sử Việt Nam với Deep Learning
 
@@ -11,16 +11,16 @@ https://user-images.githubusercontent.com/50880271/195821293-367876c1-818d-40e9-
 
 ### 1. Giới thiệu
 
-Tiếng Việt diệu kì với ngữ âm cực kỳ phong phú cùng hệ thống chữ viết giàu mạnh nhất vùng Đông Á đã trải qua hành trình từ *chữ Nho* hay *chữ Hán* cho đến *chữ Nôm* và cuối cùng là *chữ Quốc Ngữ*. Đi cùng với mỗi loại chữ ấy là những trang sử vẻ vang của dân tộc. 
+Tiếng Việt diệu kì với ngữ âm cực kỳ phong phú cùng hệ thống chữ viết giàu mạnh nhất vùng Đông Á đã trải qua hành trình từ *chữ Nho*, *chữ Hán* cho đến *chữ Nôm* và cuối cùng là *chữ Quốc Ngữ*. Đi cùng với mỗi loại chữ ấy là những trang sử vẻ vang của dân tộc. 
 
-Sau khi kết thúc Nghìn năm Bắc thuộc, ông cha ta với ý thức tự chủ ngôn ngữ, đã sáng tạo ra [chữ Nôm](https://vi.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m) dựa trên cơ sở chữ Hán được đọc theo âm Hán-Việt. Và đây cũng là công cụ duy nhất hoàn toàn ghi lại lịch sử văn hoá của dân tộc trong khoảng 10 thế kỷ. Tuy nhiên, di sản này hiện tại có nguy cơ tiêu vong.
+Sau khi kết thúc Nghìn năm Bắc thuộc, ông cha ta với ý thức tự chủ ngôn ngữ, đã sáng tạo ra [chữ Nôm](https://vi.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m) dựa trên cơ sở chữ Hán được đọc theo âm Hán-Việt. Và song song với chữ Hán, đây cũng là công cụ được dùng để ghi lại phần lớn lịch sử văn hoá của dân tộc trong khoảng 10 thế kỷ. Tuy nhiên, di sản này hiện tại có nguy cơ tiêu vong.
 
 <p align="center"><i>"Ngày nay, trên thế giới chưa có đến 100 người đọc được chữ Nôm. Một phần to tát<br/>của lịch sử Việt Nam như thế nằm ngoài tầm tay của 80 triệu người nói tiếng Việt."</i></p>
 <p align="right">(Hội Bảo tồn di sản chữ Nôm Việt Nam – <a href="http://www.nomfoundation.org">VNPF</a>)</p>
 
 Để sử dụng nguồn tri thức khổng lồ này, chúng cần phải được số hóa và dịch sang Quốc Ngữ hiện đại. Do việc dịch thuật khó khăn và tốn nhiều thời gian cùng số lượng chuyên gia hạn chế nên các nổ lực này không thể thực hiện trong thời gian ngắn. 
 
-👉 Để có thể tăng tốc quá trình số hóa này, các kỹ thuật về OCR chính là chìa khóa giúp mọi công trình chính trong Hán-Nôm thành sẵn có trực tuyến.
+👉 Để có thể tăng tốc quá trình số hóa này, các kỹ thuật về OCR chính là chìa khóa giúp mọi công trình chính trong **Hán-Nôm** thành sẵn có trực tuyến.
 
 ### 2. Các công việc đã thực hiện
 
@@ -28,7 +28,7 @@ Mình cùng người đồng đội [Nguyễn Đức Duy Anh](https://github.com
 
 - Xây dựng thành công bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr):
   - Giải quyết 2 bài toán **Text Detection** và **Text Recognition** cho các tài liệu lịch sử viết bằng Hán-Nôm.
-  - Có kích thước **lớn nhất Việt Nam hiện tại** với tổng cộng **2953 Page** và **38318 Patch**.
+  - Có kích thước **lớn nhất Việt Nam hiện tại** với tổng cộng **2953 Pages** và **38318 Patches**.
 - Xây dựng thành công Pipeline cho các tác vụ OCR trên văn bản Hán-Nôm bằng phương pháp Deep Learning. 
 
   ![](./Assets/ocr_pipeline1.jpg)
@@ -43,9 +43,10 @@ Mình cùng người đồng đội [Nguyễn Đức Duy Anh](https://github.com
 
 ![](./Assets/data_pipeline_vi.jpg)
 
-**Lưu ý**: Các bạn nên sử dụng font [NomNaTong](http://www.nomfoundation.org/nom-tools/Nom-Font) để có thể đọc các nội dung Hán-Nôm 1 cách tốt nhất.
+- Dataset: https://www.kaggle.com/datasets/quandang/nomnaocr
+- Paper: https://ieeexplore.ieee.org/document/10013842
 
-> Dataset: https://www.kaggle.com/datasets/quandang/nomnaocr
+**Lưu ý**: Các bạn nên sử dụng font [NomNaTong](http://www.nomfoundation.org/nom-tools/Nom-Font) để có thể đọc các nội dung Hán-Nôm 1 cách tốt nhất.
 
 ### 1. Quy trình thu thập dữ liệu
 
@@ -57,7 +58,7 @@ https://user-images.githubusercontent.com/50880271/195821433-59c35cec-af04-4706-
 
 #### a. Hướng dẫn thu thập
 
-> Khâu này mình không viết code nên có làm hơi thủ công tí 😅.
+> Khâu này mình lười viết code nên có làm hơi thủ công tí 😅.
 
 - Import file [workflow.json](./Data%20collection/workflow.json) vào [Automa](https://www.automa.site).
 - Chọn thẻ `New tab` và chọn `Edit` => nhập URL của các tác phẩm Hán-Nôm cần thu thập.
@@ -106,7 +107,7 @@ Tuy nhiên, với các ảnh trong [NomNaOCR](https://www.kaggle.com/datasets/qu
 - Sau đó đưa ảnh vào [PPOCRLabel](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.6/PPOCRLabel/README.md) để dự đoán các `bounding box`. 
 - Khi dự đoán xong, chạy file [unrotated_convertor.py](./Data%20labeling/Auto%20annotation/unrotated_convertor.py) để xoay dọc các `bounding box` lại.
 
-Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) được xử lý và thu được **2953 Page** (đã bỏ đi 1 Page scan lỗi và 2 Page trống). Bằng cách gán nhãn bán thủ công, nhóm mình đã thu được thêm **38318 Patch**. Tiếp theo, nhóm mình sử dụng [công thức](./Data%20splitting/IHRNomDB_Rs.py) từ bộ dữ liệu [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html) để [chia dữ liệu Recognition](./Data%20splitting/split_patches.py) 1 cách hiệu quả nhất. Phần **Synthetic Nom String** thuộc bộ dữ liệu này cũng được dùng để thực hiện **Pretraining** cho các mô hình **Recognition**.
+Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) được xử lý và thu được **2953 Pages** (đã bỏ đi 1 Page scan lỗi và 2 Page trống). Bằng cách gán nhãn bán thủ công, nhóm mình đã thu được thêm **38318 Patches**. Tiếp theo, nhóm mình sử dụng [công thức](./Data%20splitting/IHRNomDB_Rs.py) từ bộ dữ liệu [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html) để có được phân phối tương đồng giữa tập `Train` và `Validate` để [chia dữ liệu Recognition](./Data%20splitting/split_patches.py) 1 cách hiệu quả nhất. Phần **Synthetic Nom String** thuộc bộ dữ liệu này cũng được dùng để thực hiện **Pretraining** cho các mô hình **Recognition**.
 
 |   **Tập dữ liệu**   | **Số điểm dữ liệu** | **Tỉ lệ ký tự giao nhau** |
 |:-------------------:|:-------------------:|:-------------------------:|
@@ -120,7 +121,7 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 ![](./Assets/training_pipeline_vi.jpg)
 
-- Với Detection mình sử dụng [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) để huấn luyện với các file config tương ứng trong folder [Text detection](./Text%20detection/).
+- Với Detection, mình sử dụng [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) để huấn luyện với các file config tương ứng trong [folder Text detection](./Text%20detection/).
 - Với Recognition, trong quá trình **PreTraining** trên bộ **Synthetic Nom String** của [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html), mình nhận thấy khi thực hiện **Skip Connection** (SC) cho **feature map** với 1 lớp **X** có cùng shape và nằm xa nó nhất sẽ cải thiện đáng kể hiệu suất mô hình. Vì vậy, mình có thử nghiệm 2 phương pháp **Skip Connection** cơ bản là **Addition** và **Concatenation** cho các mô hình khả thi nhất (tồn tại lớp **X** nói trên).
 
 👉 Download weights của các mô hình [tại đây](https://drive.google.com/file/d/1lzFX4llRK-e18a95Lg4plXoSgjXXgzL5/view?usp=sharing).
@@ -129,9 +130,9 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 ![](./Assets/evaluation_pipeline_vi.jpg)
 
-- Metrics đánh giá Text Detection và End-to-End: sử dụng 1 phương pháp mới tên là [CLEval](https://github.com/clovaai/CLEval) giúp đánh giá hiệu quả cho cả 2 giai đoạn phát hiện và nhận dạng văn bản (End-to-End). Ngoài ra, phương pháp này cũng có thể đánh giá được cho riêng Text Detection nên tùy vào bài toán mà [CLEval](https://github.com/clovaai/CLEval) sẽ có sự khác nhau trong các thành phần tính toán của nó.
-- Metrics đánh giá cho riêng Text Recognition: sử dụng các phương pháp tương tự với các công trình trước đó bao gồm: **Sequence Accuracy**, **Character Accuracy** và **Character Error Rate** (CER).
-- Ngoài ra, với Recognition mình chỉ giữ lại output của những `notebook` hay mô hình có kết quả tốt nhất trên tập **Validate** của [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) gồm: 
+- Metrics đánh giá **Text Detection** và **End-to-End**: sử dụng 1 phương pháp mới tên là [CLEval](https://github.com/clovaai/CLEval) giúp đánh giá hiệu quả cho cả 2 giai đoạn phát hiện và nhận dạng văn bản (End-to-End). Ngoài ra, phương pháp này cũng có thể đánh giá được cho riêng Text Detection nên tùy vào bài toán mà [CLEval](https://github.com/clovaai/CLEval) sẽ có sự khác nhau trong các thành phần tính toán của nó.
+- Metrics đánh giá cho riêng **Text Recognition**: sử dụng các phương pháp tương tự với các công trình trước đó bao gồm: **Sequence Accuracy**, **Character Accuracy** và **Character Error Rate** (CER).
+- Ngoài ra, với **Recognition** mình chỉ giữ lại output của những `notebook` hay mô hình có kết quả tốt nhất trên tập **Validate** của [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) gồm: 
   - [CRNNxCTC.ipynb](./Text%20recognition/CRNNxCTC/CRNNxCTC.ipynb): có **Sequence Accuracy** cao nhất.
   - [SC-CNNxTransformer_finetune.ipynb](./Text%20recognition/TransformerOCR/SC-CNNxTransformer_finetune.ipynb): có **Character Accuracy** và **CER** cao nhất.
 
@@ -189,9 +190,9 @@ Sau khâu triển khai thực tế, bộ dữ liệu [NomNaOCR](https://www.kagg
 
 - [ ] Sử dụng **Beam search** hay xa hơn nữa là **Language model** để giải mã đầu ra (decode) cho **Text Recognition**, tham khảo từ các project của [Harald Scheidl](https://github.com/githubharald).
 - [ ] [NomNaOCRpp](https://github.com/ds4v/NomNaOCRpp): Thử nghiệm các mô hình hiện đại hơn hay các mô hình SOTA trên các bộ dữ liệu benchmark nổi tiếng như ICDAR [2013](https://paperswithcode.com/dataset/icdar-2013) và [2015](https://paperswithcode.com/dataset/icdar-2015).
-- [ ] [NomNaSite](https://github.com/ds4v/NomNaSite): Xây dựng WebApp để ứng dụng các bài toán đã triển khai vào thực tế.
-- [ ] [NomNaNMT](https://github.com/ds4v/NomNaNMT), phát triển 2 bài toán dịch máy sau: 
-  - [x] Dịch các phiên âm Hán-Nôm sang chữ Quốc Ngữ: đã được triển khai bởi [HCMUS](https://www.clc.hcmus.edu.vn/?page_id=3039).
+- [x] [NomNaSite](https://github.com/ds4v/NomNaSite): Xây dựng WebApp để ứng dụng các bài toán đã triển khai vào thực tế.
+- [ ] [NomNaNMT](https://github.com/ds4v/NomNaNMT): Phát triển 2 bài toán dịch máy sau.
+  - [x] Dịch các phiên âm Hán-Nôm sang chữ Quốc Ngữ: Đã được triển khai bởi [HCMUS](https://www.clc.hcmus.edu.vn/?page_id=3039).
   - [ ] Từ phần Quốc Ngữ phía trên sẽ dịch tiếp ra Tiếng Việt (văn phong hiện tại).
 
   ![](./Assets/nomnanmt.jpg)
