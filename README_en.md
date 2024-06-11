@@ -36,6 +36,7 @@ My teammate [Nguyễn Đức Duy Anh](https://github.com/duyanh1909) and I have 
   - https://github.com/trhgquan/OCR_chu_nom
   - https://www.kaggle.com/competitions/kuzushiji-recognition
 
+👉 You can take a look at this [thesis_en.pdf](./thesis_en.pdf) file for a summary of the models used in this project.
 
 ## II. The [NomNaOCR](https://www.kaggle.com/datasets/quandang/nomnaocr) Dataset
 
@@ -122,7 +123,7 @@ After the actual implementation, the [NomNaOCR](https://www.kaggle.com/datasets/
 - For Detection, I used [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) for training with corresponding config files in the [Text detection folder](./Text%20detection/).
 - For Recognition, during the **PreTraining** phase on the **Synthetic Nom String** set of [IHR-NomDB](https://morphoboid.labri.fr/ihr-nom.html), we found that when performing **Skip Connection** (SC) for the **feature map** with a layer **X** that has the same shape and is located as far away from this **feature map** as possible, it will significantly improve model performance. Therefore, we also experimented 2 fundamental **Skip Connection** methods: **Addition** and **Concatenation** for the most feasible models (those contain the aforementioned layer **X**).
 
-👉 Download the weights of models [here](https://drive.google.com/file/d/1lzFX4llRK-e18a95Lg4plXoSgjXXgzL5/view?usp=sharing).
+👉 Download the weights of models [here](https://drive.google.com/file/d/1GDUM3gO5hDBaicCbESf3G07XH5I3sx4k/view).
 
 ### 2. Evaluation Process
 
@@ -136,6 +137,7 @@ After the actual implementation, the [NomNaOCR](https://www.kaggle.com/datasets/
 
   ![](./Assets/example_rec.jpg)
 
+👉 Check [thesis_en.pdf](./thesis_en.pdf) for more information.
 
 ## IV. Experimental Results
 
